@@ -1,4 +1,3 @@
-
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require('discord.js');
 
 module.exports = {
@@ -24,7 +23,7 @@ module.exports = {
 
   async execute(interaction, client) {
     const categoria = interaction.options.getString('categoria');
-    
+
     if (categoria) {
       await this.showCategory(interaction, categoria, 0);
     } else {
@@ -80,46 +79,48 @@ module.exports = {
   async showCategory(context, categoria, page = 0) {
     const comandos = {
       moderation: [
-        { name: 'ban', description: 'Banear un usuario', usage: '/ban @usuario [razón]' },
-        { name: 'kick', description: 'Expulsar un usuario', usage: '/kick @usuario [razón]' },
-        { name: 'timeout', description: 'Aislar temporalmente', usage: '/timeout @usuario <tiempo>' },
-        { name: 'warn', description: 'Advertir a un usuario', usage: '/warn @usuario [razón]' },
-        { name: 'clear', description: 'Borrar mensajes', usage: '/clear <cantidad>' },
-        { name: 'addrole', description: 'Agregar rol a usuario', usage: '/addrole @usuario @rol' }
+        { name: 'ban', description: 'Banear un usuario', usage: '`/ban` o `vk ban` @usuario [razón]' },
+        { name: 'kick', description: 'Expulsar un usuario', usage: '`/kick` o `vk kick` @usuario [razón]' },
+        { name: 'timeout', description: 'Aislar temporalmente', usage: '`/timeout` o `vk timeout` @usuario <tiempo>' },
+        { name: 'warn', description: 'Advertir a un usuario', usage: '`/warn` o `vk warn` @usuario [razón]' },
+        { name: 'clear', description: 'Borrar mensajes', usage: '`/clear` o `vk clear` <cantidad>' },
+        { name: 'addrole', description: 'Agregar rol a usuario', usage: '`/addrole` o `vk addrole` @usuario @rol' }
       ],
       fun: [
-        { name: 'hola', description: 'Saludo personalizado', usage: '/hola' },
-        { name: '8ball', description: 'Bola mágica 8', usage: '/8ball <pregunta>' },
-        { name: 'chiste', description: 'Contar un chiste', usage: '/chiste' },
-        { name: 'dado', description: 'Lanzar un dado', usage: '/dado [lados]' },
-        { name: 'moneda', description: 'Lanzar una moneda', usage: '/moneda' },
-        { name: 'insulto', description: 'Insulto gracioso', usage: '/insulto [@usuario]' }
+        { name: 'hola', description: 'Saludo personalizado con IA', usage: '`/hola` o `vk hola`' },
+        { name: '8ball', description: 'Bola mágica 8', usage: '`/8ball` o `vk 8ball` <pregunta>' },
+        { name: 'chiste', description: 'Contar un chiste', usage: '`/chiste` o `vk chiste`' },
+        { name: 'dado', description: 'Lanzar un dado', usage: '`/dado` o `vk dado` [lados]' },
+        { name: 'moneda', description: 'Lanzar una moneda', usage: '`/moneda` o `vk moneda`' },
+        { name: 'insulto', description: 'Insulto gracioso', usage: '`/insulto` o `vk insulto` [@usuario]' }
       ],
       economy: [
-        { name: 'balance', description: 'Ver tu dinero', usage: '/balance [@usuario]' },
-        { name: 'daily', description: 'Recompensa diaria', usage: '/daily' },
-        { name: 'weekly', description: 'Recompensa semanal', usage: '/weekly' },
-        { name: 'work', description: 'Trabajar por dinero', usage: '/work' },
-        { name: 'jobs', description: 'Sistema de trabajos', usage: '/jobs list' },
-        { name: 'shop', description: 'Tienda del servidor', usage: '/shop' }
+        { name: 'balance', description: 'Ver tu dinero', usage: '`/balance` o `vk balance` [@usuario]' },
+        { name: 'daily', description: 'Recompensa diaria', usage: '`/daily` o `vk daily`' },
+        { name: 'weekly', description: 'Recompensa semanal', usage: '`/weekly` o `vk weekly`' },
+        { name: 'work', description: 'Trabajar por dinero', usage: '`/work` o `vk work`' },
+        { name: 'jobs', description: 'Sistema de trabajos', usage: '`/jobs` o `vk jobs` <acción>' },
+        { name: 'shop', description: 'Tienda del servidor', usage: '`/shop` o `vk shop`' },
+        { name: 'buy', description: 'Comprar artículos', usage: '`/buy` o `vk buy` <artículo>' }
       ],
       utils: [
-        { name: 'avatar', description: 'Ver avatar de usuario', usage: '/avatar [@usuario]' },
-        { name: 'userinfo', description: 'Info de usuario', usage: '/userinfo [@usuario]' },
-        { name: 'serverinfo', description: 'Info del servidor', usage: '/serverinfo' },
-        { name: 'say', description: 'Hacer hablar al bot', usage: '/say <mensaje>' },
-        { name: 'reminder', description: 'Crear recordatorio', usage: '/reminder <tiempo> <mensaje>' },
-        { name: 'translate', description: 'Traducir texto', usage: '/translate <idioma> <texto>' }
+        { name: 'avatar', description: 'Ver avatar de usuario', usage: '`/avatar` o `vk avatar` [@usuario]' },
+        { name: 'userinfo', description: 'Info de usuario', usage: '`/userinfo` o `vk userinfo` [@usuario]' },
+        { name: 'serverinfo', description: 'Info del servidor', usage: '`/serverinfo` o `vk serverinfo`' },
+        { name: 'say', description: 'Hacer hablar al bot', usage: '`/say` o `vk say` <mensaje>' },
+        { name: 'reminder', description: 'Crear recordatorio', usage: '`/reminder` o `vk reminder` <tiempo> <mensaje>' },
+        { name: 'translate', description: 'Traducir texto', usage: '`/translate` o `vk translate` <idioma> <texto>' },
+        { name: 'birthday', description: 'Configurar cumpleaños', usage: '`/birthday` o `vk birthday` <fecha>' }
       ],
       info: [
-        { name: 'ping', description: 'Latencia del bot', usage: '/ping' },
-        { name: 'uptime', description: 'Tiempo activo', usage: '/uptime' },
-        { name: 'support', description: 'Servidor de soporte', usage: '/support' },
-        { name: 'ask', description: 'Preguntar a la IA', usage: '/ask <pregunta>' }
+        { name: 'ping', description: 'Latencia del bot', usage: '`/ping` o `vk ping`' },
+        { name: 'uptime', description: 'Tiempo activo', usage: '`/uptime` o `vk uptime`' },
+        { name: 'support', description: 'Servidor de soporte', usage: '`/support` o `vk support`' },
+        { name: 'ask', description: 'Preguntar a VK AI', usage: '`/ask` o `vk ask` <pregunta>' }
       ],
       games: [
-        { name: 'guess', description: 'Adivina el número', usage: '/guess' },
-        { name: 'trivia', description: 'Preguntas de trivia', usage: '/trivia' }
+        { name: 'guess', description: 'Adivina el número', usage: '`/guess` o `vk guess`' },
+        { name: 'trivia', description: 'Preguntas de trivia', usage: '`/trivia` o `vk trivia`' }
       ]
     };
 
@@ -127,7 +128,7 @@ module.exports = {
     const itemsPerPage = 6;
     const totalPages = Math.ceil(categoryCommands.length / itemsPerPage);
     const currentPage = Math.min(page, totalPages - 1);
-    
+
     const startIndex = currentPage * itemsPerPage;
     const endIndex = startIndex + itemsPerPage;
     const pageCommands = categoryCommands.slice(startIndex, endIndex);
@@ -157,7 +158,7 @@ module.exports = {
     });
 
     const buttons = new ActionRowBuilder();
-    
+
     // Botón anterior
     buttons.addComponents(
       new ButtonBuilder()

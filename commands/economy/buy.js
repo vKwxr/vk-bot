@@ -1,4 +1,3 @@
-
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
@@ -17,109 +16,168 @@ module.exports = {
         .setMaxValue(10)),
 
   async execute(interaction, client) {
-    const { economyDb } = client.config;
-    const userId = interaction.user.id;
-    const articulo = interaction.options.getString('articulo');
-    const cantidad = interaction.options.getInteger('cantidad') || 1;
+    try {
+      const { economyDb } = client.config;
+      const item = interaction.options.getString('articulo');
+      const userId = interaction.user.id;
 
-    // Buscar artículo
-    economyDb.get(
-      `SELECT * FROM shop_items WHERE LOWER(name) LIKE LOWER(?)`,
-      [`%${articulo}%`],
-      async (err, item) => {
-        if (err || !item) {
-          return interaction.reply({
-            content: '❌ Artículo no encontrado en la tienda.',
-            ephemeral: true
-          });
-        }
+      if (!economyDb) {
+        return interaction.reply({
+          content: '❌ Error de base de datos. Contacta al administrador.',
+          ephemeral: true
+        });
+      }
 
-        // Verificar stock
-        if (item.stock !== -1 && item.stock < cantidad) {
-          return interaction.reply({
-            content: `❌ No hay suficiente stock. Disponible: ${item.stock}`,
-            ephemeral: true
-          });
-        }
-
-        const totalPrice = item.price * cantidad;
-
-        // Verificar dinero del usuario
-        economyDb.get(
-          `SELECT * FROM economy WHERE user_id = ?`,
-          [userId],
-          async (err, userEconomy) => {
+      // Buscar artículo
+      economyDb.get(
+        `SELECT * FROM shop_items WHERE name LIKE ? OR id = ?`,
+        [`%${item}%`, parseInt(item) || 0],
+        async (err, shopItem) => {
+          try {
             if (err) {
+              console.error('Error buscando artículo:', err);
               return interaction.reply({
-                content: '❌ Error al acceder a tu economía.',
+                content: '❌ Error al buscar el artículo.',
                 ephemeral: true
               });
             }
 
-            if (!userEconomy) {
-              economyDb.run(
-                `INSERT INTO economy (user_id) VALUES (?)`,
-                [userId]
-              );
+            if (!shopItem) {
               return interaction.reply({
-                content: '❌ No tienes dinero suficiente.',
+                content: '❌ Artículo no encontrado en la tienda. Usa `/shop` para ver los disponibles.',
                 ephemeral: true
               });
             }
 
-            if (userEconomy.wallet < totalPrice) {
+            // Verificar stock
+            if (shopItem.stock === 0) {
               return interaction.reply({
-                content: `❌ No tienes dinero suficiente. Necesitas ${totalPrice} monedas pero tienes ${userEconomy.wallet}.`,
+                content: '❌ Este artículo está agotado.',
                 ephemeral: true
               });
             }
 
-            // Procesar compra
-            const newWallet = userEconomy.wallet - totalPrice;
-            
-            economyDb.run(
-              `UPDATE economy SET wallet = ? WHERE user_id = ?`,
-              [newWallet, userId],
-              async (err) => {
-                if (err) {
-                  return interaction.reply({
-                    content: '❌ Error al procesar la compra.',
+            // Verificar dinero del usuario
+            economyDb.get(
+              `SELECT * FROM economy WHERE user_id = ?`,
+              [userId],
+              async (err, userEconomy) => {
+                try {
+                  if (err) {
+                    console.error('Error verificando economía:', err);
+                    return interaction.reply({
+                      content: '❌ Error al verificar tu balance.',
+                      ephemeral: true
+                    });
+                  }
+
+                  // Crear registro de economía si no existe
+                  if (!userEconomy) {
+                    economyDb.run(
+                      `INSERT OR IGNORE INTO economy (user_id, wallet, bank) VALUES (?, 0, 0)`,
+                      [userId],
+                      (err) => {
+                        if (err) console.error('Error creando economía:', err);
+                      }
+                    );
+                    userEconomy = { wallet: 0, bank: 0 };
+                  }
+
+                  const userMoney = userEconomy.wallet || 0;
+
+                  if (userMoney < shopItem.price) {
+                    return interaction.reply({
+                      content: `❌ No tienes suficiente dinero. Necesitas **${shopItem.price}** monedas pero solo tienes **${userMoney}**.`,
+                      ephemeral: true
+                    });
+                  }
+
+                  // Realizar compra
+                  const newWallet = userMoney - shopItem.price;
+
+                  economyDb.run(
+                    `UPDATE economy SET wallet = ? WHERE user_id = ?`,
+                    [newWallet, userId],
+                    (err) => {
+                      try {
+                        if (err) {
+                          console.error('Error actualizando wallet:', err);
+                          return interaction.reply({
+                            content: '❌ Error al procesar la compra.',
+                            ephemeral: true
+                          });
+                        }
+
+                        // Actualizar stock si no es ilimitado
+                        if (shopItem.stock > 0) {
+                          economyDb.run(
+                            `UPDATE shop_items SET stock = stock - 1 WHERE id = ?`,
+                            [shopItem.id],
+                            (err) => {
+                              if (err) console.error('Error actualizando stock:', err);
+                            }
+                          );
+                        }
+
+                        // Agregar al inventario
+                        economyDb.run(
+                          `INSERT INTO user_inventory (user_id, item_id, quantity) VALUES (?, ?, 1)
+                           ON CONFLICT(user_id, item_id) DO UPDATE SET quantity = quantity + 1`,
+                          [userId, shopItem.id],
+                          (err) => {
+                            if (err) console.error('Error agregando al inventario:', err);
+                          }
+                        );
+
+                        const embed = new EmbedBuilder()
+                          .setTitle('🛍️ Compra Exitosa')
+                          .setDescription(`Has comprado **${shopItem.name}** ${shopItem.emoji}`)
+                          .addFields(
+                            { name: '💰 Precio Pagado', value: `${shopItem.price} monedas`, inline: true },
+                            { name: '💳 Dinero Restante', value: `${newWallet} monedas`, inline: true },
+                            { name: '📦 Descripción', value: shopItem.description, inline: false }
+                          )
+                          .setColor('#00ff00')
+                          .setFooter({ text: 'VK Community • Compra procesada' })
+                          .setTimestamp();
+
+                        interaction.reply({ embeds: [embed] });
+                      } catch (error) {
+                        console.error('Error en procesamiento de compra:', error);
+                        interaction.reply({
+                          content: '❌ Error inesperado al procesar la compra.',
+                          ephemeral: true
+                        });
+                      }
+                    }
+                  );
+                } catch (error) {
+                  console.error('Error en verificación de economía:', error);
+                  interaction.reply({
+                    content: '❌ Error inesperado en la verificación.',
                     ephemeral: true
                   });
                 }
-
-                // Actualizar stock si no es infinito
-                if (item.stock !== -1) {
-                  economyDb.run(
-                    `UPDATE shop_items SET stock = stock - ? WHERE id = ?`,
-                    [cantidad, item.id]
-                  );
-                }
-
-                // Agregar al inventario
-                economyDb.run(
-                  `INSERT INTO user_inventory (user_id, item_id, quantity) VALUES (?, ?, ?)
-                   ON CONFLICT(user_id, item_id) DO UPDATE SET quantity = quantity + ?`,
-                  [userId, item.id, cantidad, cantidad]
-                );
-
-                const embed = new EmbedBuilder()
-                  .setTitle('🛒 Compra Exitosa')
-                  .setDescription(`Has comprado **${cantidad}x ${item.emoji} ${item.name}**`)
-                  .addFields(
-                    { name: '💰 Precio Total', value: `${totalPrice} monedas`, inline: true },
-                    { name: '💵 Dinero Restante', value: `${newWallet} monedas`, inline: true }
-                  )
-                  .setColor('#00ff00')
-                  .setTimestamp();
-
-                await interaction.reply({ embeds: [embed] });
               }
             );
+          } catch (error) {
+            console.error('Error en búsqueda de artículo:', error);
+            interaction.reply({
+              content: '❌ Error inesperado al buscar el artículo.',
+              ephemeral: true
+            });
           }
-        );
+        }
+      );
+    } catch (error) {
+      console.error('Error general en comando buy:', error);
+      if (!interaction.replied) {
+        interaction.reply({
+          content: '❌ Error crítico al procesar la compra. Contacta al administrador.',
+          ephemeral: true
+        });
       }
-    );
+    }
   },
 
   name: 'buy',
@@ -149,7 +207,7 @@ module.exports = {
             }
 
             const newWallet = userEconomy.wallet - item.price;
-            
+
             economyDb.run(
               `UPDATE economy SET wallet = ? WHERE user_id = ?`,
               [newWallet, userId]

@@ -272,33 +272,23 @@ async function deployCommands() {
   try {
     console.log(`🔄 Registrando ${commands.length} comandos slash...`);
 
-    // Simplemente registrar todos los comandos
-    await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: commands }
-    );
+    // Obtener comandos existentes primero
+    const existingCommands = await rest.get(Routes.applicationCommands(process.env.CLIENT_ID));
+    
+    // Registrar comandos uno por uno para evitar el error de Entry Point
+    for (const command of commands) {
+      try {
+        await rest.post(Routes.applicationCommands(process.env.CLIENT_ID), { body: command });
+      } catch (cmdError) {
+        if (cmdError.code !== 50035) { // Ignorar duplicados
+          console.error(`❌ Error registrando comando ${command.name}:`, cmdError.message);
+        }
+      }
+    }
 
     console.log('✅ Comandos slash registrados correctamente.');
   } catch (error) {
-    console.error('❌ Error registrando comandos:', error);
-    // Si hay error con bulk update, intentar borrar todos y recrear
-    try {
-      console.log('🔄 Limpiando comandos existentes...');
-      await rest.put(
-        Routes.applicationCommands(process.env.CLIENT_ID),
-        { body: [] }
-      );
-      
-      console.log('🔄 Registrando comandos nuevamente...');
-      await rest.put(
-        Routes.applicationCommands(process.env.CLIENT_ID),
-        { body: commands }
-      );
-      
-      console.log('✅ Comandos registrados después de limpieza.');
-    } catch (altError) {
-      console.error('❌ Error en método alternativo:', altError);
-    }
+    console.error('❌ Error registrando comandos:', error.message);
   }
 }
 

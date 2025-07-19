@@ -1,32 +1,40 @@
-
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('jobs')
-    .setDescription('Sistema de trabajos')
+    .setDescription('💼 Sistema de trabajos avanzado')
     .addSubcommand(subcommand =>
-      subcommand.setName('list')
+      subcommand
+        .setName('list')
         .setDescription('Ver trabajos disponibles')
     )
     .addSubcommand(subcommand =>
-      subcommand.setName('apply')
+      subcommand
+        .setName('apply')
         .setDescription('Aplicar a un trabajo')
         .addStringOption(option =>
           option.setName('trabajo')
             .setDescription('Nombre del trabajo')
             .setRequired(true)
             .addChoices(
-              { name: '🍕 Repartidor de Pizza', value: 'pizza' },
-              { name: '💻 Programador', value: 'programmer' },
+              { name: '👨‍💻 Programador', value: 'programador' },
+              { name: '🎨 Diseñador', value: 'diseñador' },
+              { name: '🏪 Vendedor', value: 'vendedor' },
+              { name: '🚗 Conductor', value: 'conductor' },
               { name: '🏥 Doctor', value: 'doctor' },
-              { name: '👮 Policía', value: 'police' },
-              { name: '🚗 Conductor', value: 'driver' }
+              { name: '👨‍🏫 Profesor', value: 'profesor' }
             )
         )
     )
     .addSubcommand(subcommand =>
-      subcommand.setName('quit')
+      subcommand
+        .setName('current')
+        .setDescription('Ver tu trabajo actual')
+    )
+    .addSubcommand(subcommand =>
+      subcommand
+        .setName('quit')
         .setDescription('Renunciar a tu trabajo actual')
     ),
 
@@ -35,15 +43,125 @@ module.exports = {
   usage: 'vk work list | vk work apply <trabajo> | vk work quit',
 
   async execute(interaction, client) {
+    const { economyDb } = client.config;
     const subcommand = interaction.options.getSubcommand();
+    const userId = interaction.user.id;
+
+    // Trabajos disponibles
+    const trabajos = {
+      'programador': { name: '👨‍💻 Programador', salary_min: 500, salary_max: 800, cooldown: 7200000 }, // 2h
+      'diseñador': { name: '🎨 Diseñador', salary_min: 300, salary_max: 600, cooldown: 5400000 }, // 1.5h
+      'vendedor': { name: '🏪 Vendedor', salary_min: 200, salary_max: 400, cooldown: 3600000 }, // 1h
+      'conductor': { name: '🚗 Conductor', salary_min: 150, salary_max: 300, cooldown: 2700000 }, // 45m
+      'doctor': { name: '🏥 Doctor', salary_min: 600, salary_max: 1000, cooldown: 10800000 }, // 3h
+      'profesor': { name: '👨‍🏫 Profesor', salary_min: 250, salary_max: 500, cooldown: 7200000 } // 2h
+    };
 
     if (subcommand === 'list') {
-      await this.showJobs(interaction);
+      const embed = new EmbedBuilder()
+        .setTitle('💼 Trabajos Disponibles en VK Community')
+        .setDescription('Usa `/jobs apply <trabajo>` para aplicar a un trabajo')
+        .setColor('#9966ff')
+        .setTimestamp();
+
+      Object.entries(trabajos).forEach(([key, job]) => {
+        const cooldownHours = job.cooldown / 3600000;
+        embed.addFields({
+          name: job.name,
+          value: `💰 $${job.salary_min}-${job.salary_max}/trabajo\n⏰ Cooldown: ${cooldownHours}h`,
+          inline: true
+        });
+      });
+
+      await interaction.reply({ embeds: [embed] });
+
     } else if (subcommand === 'apply') {
-      const trabajo = interaction.options.getString('trabajo');
-      await this.applyJob(interaction, trabajo);
+      const trabajoKey = interaction.options.getString('trabajo');
+      const trabajo = trabajos[trabajoKey];
+
+      if (!trabajo) {
+        return interaction.reply({ content: '❌ Trabajo no válido.', ephemeral: true });
+      }
+
+      // Verificar si ya tiene trabajo
+      economyDb.get('SELECT * FROM jobs WHERE user_id = ?', [userId], async (err, row) => {
+        if (row) {
+          return interaction.reply({ 
+            content: `❌ Ya tienes el trabajo de **${row.job_name}**. Usa \`/jobs quit\` para renunciar primero.`, 
+            ephemeral: true 
+          });
+        }
+
+        // Asignar trabajo
+        economyDb.run(
+          'INSERT OR REPLACE INTO jobs (user_id, job_name, salary_min, salary_max, cooldown) VALUES (?, ?, ?, ?, ?)',
+          [userId, trabajo.name, trabajo.salary_min, trabajo.salary_max, trabajo.cooldown],
+          async (err) => {
+            if (err) {
+              return interaction.reply({ content: '❌ Error al aplicar al trabajo.', ephemeral: true });
+            }
+
+            const embed = new EmbedBuilder()
+              .setTitle('🎉 ¡Felicidades!')
+              .setDescription(`Has sido contratado como **${trabajo.name}**`)
+              .addFields(
+                { name: '💰 Salario', value: `$${trabajo.salary_min}-${trabajo.salary_max} por trabajo`, inline: true },
+                { name: '⏰ Cooldown', value: `${trabajo.cooldown / 3600000} horas`, inline: true },
+                { name: '📝 Instrucciones', value: 'Usa `/work` para trabajar y ganar dinero', inline: false }
+              )
+              .setColor('#00ff00')
+              .setTimestamp();
+
+            await interaction.reply({ embeds: [embed] });
+          }
+        );
+      });
+
+    } else if (subcommand === 'current') {
+      economyDb.get('SELECT * FROM jobs WHERE user_id = ?', [userId], async (err, row) => {
+        if (!row) {
+          return interaction.reply({ 
+            content: '❌ No tienes ningún trabajo. Usa `/jobs apply` para conseguir uno.', 
+            ephemeral: true 
+          });
+        }
+
+        const embed = new EmbedBuilder()
+          .setTitle('💼 Tu Trabajo Actual')
+          .addFields(
+            { name: '🏷️ Puesto', value: row.job_name, inline: true },
+            { name: '💰 Salario', value: `$${row.salary_min}-${row.salary_max}`, inline: true },
+            { name: '⏰ Cooldown', value: `${row.cooldown / 3600000}h`, inline: true }
+          )
+          .setColor('#9966ff')
+          .setTimestamp();
+
+        await interaction.reply({ embeds: [embed] });
+      });
+
     } else if (subcommand === 'quit') {
-      await this.quitJob(interaction);
+      economyDb.get('SELECT * FROM jobs WHERE user_id = ?', [userId], async (err, row) => {
+        if (!row) {
+          return interaction.reply({ 
+            content: '❌ No tienes ningún trabajo del cual renunciar.', 
+            ephemeral: true 
+          });
+        }
+
+        economyDb.run('DELETE FROM jobs WHERE user_id = ?', [userId], async (err) => {
+          if (err) {
+            return interaction.reply({ content: '❌ Error al renunciar.', ephemeral: true });
+          }
+
+          const embed = new EmbedBuilder()
+            .setTitle('👋 Has Renunciado')
+            .setDescription(`Has renunciado a tu trabajo de **${row.job_name}**`)
+            .setColor('#ff6b6b')
+            .setTimestamp();
+
+          await interaction.reply({ embeds: [embed] });
+        });
+      });
     }
   },
 
