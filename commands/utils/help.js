@@ -132,7 +132,64 @@ async function showCategoryHelp(interaction, categoria, client, isMessage = fals
         { name: '/jumbo', value: 'Agranda un emoji', inline: true }
       );
       break;
-    // Agregar más categorías...
+    case 'economy':
+      embed.addFields(
+        { name: '/balance', value: 'Ve tu dinero disponible', inline: true },
+        { name: '/daily', value: 'Reclama tu recompensa diaria', inline: true },
+        { name: '/work', value: 'Trabaja para ganar dinero', inline: true },
+        { name: '/shop', value: 'Ve la tienda de artículos', inline: true },
+        { name: '/buy', value: 'Compra un artículo', inline: true },
+        { name: '/inventory', value: 'Ve tu inventario', inline: true }
+      );
+      break;
+    case 'utils':
+      embed.addFields(
+        { name: '/avatar', value: 'Muestra el avatar de un usuario', inline: true },
+        { name: '/banner', value: 'Muestra el banner de un usuario', inline: true },
+        { name: '/skin', value: 'Muestra la skin de Minecraft', inline: true },
+        { name: '/birthday', value: 'Gestiona cumpleaños', inline: true },
+        { name: '/serverinfo', value: 'Información del servidor', inline: true },
+        { name: '/userinfo', value: 'Información de usuario', inline: true }
+      );
+      break;
+    case 'tickets':
+      embed.addFields(
+        { name: '/ticket', value: 'Crea un ticket de soporte', inline: true },
+        { name: '/close', value: 'Cierra un ticket', inline: true },
+        { name: '/add', value: 'Añade usuario al ticket', inline: true },
+        { name: '/remove', value: 'Remueve usuario del ticket', inline: true },
+        { name: '/claim', value: 'Reclama un ticket', inline: true },
+        { name: '/rename', value: 'Renombra un ticket', inline: true }
+      );
+      break;
+    case 'games':
+      embed.addFields(
+        { name: '/rps', value: 'Piedra, papel o tijera', inline: true },
+        { name: '/coinflip', value: 'Lanza una moneda', inline: true },
+        { name: '/dice', value: 'Lanza un dado', inline: true },
+        { name: '/trivia', value: 'Pregunta de trivia', inline: true },
+        { name: '/blackjack', value: 'Juega blackjack', inline: true },
+        { name: '/slots', value: 'Máquina tragamonedas', inline: true }
+      );
+      break;
+    case 'levels':
+      embed.addFields(
+        { name: '/rank', value: 'Ve tu nivel actual', inline: true },
+        { name: '/leaderboard', value: 'Top de usuarios por nivel', inline: true },
+        { name: '/setlevel', value: 'Establece el nivel de un usuario', inline: true },
+        { name: '/resetlevels', value: 'Reinicia todos los niveles', inline: true }
+      );
+      break;
+    case 'info':
+      embed.addFields(
+        { name: '/support', value: 'Enlaces de soporte del bot', inline: true },
+        { name: '/ping', value: 'Latencia del bot', inline: true },
+        { name: '/uptime', value: 'Tiempo activo del bot', inline: true },
+        { name: '/invite', value: 'Invita el bot a tu servidor', inline: true },
+        { name: '/stats', value: 'Estadísticas del bot', inline: true },
+        { name: '/changelog', value: 'Últimos cambios del bot', inline: true }
+      );
+      break;
   }
 
   const backButton = new ActionRowBuilder()
