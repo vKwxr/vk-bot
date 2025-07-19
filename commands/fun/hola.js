@@ -1,4 +1,3 @@
-
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 const saludos = [
@@ -20,12 +19,29 @@ module.exports = {
     .setDescription('👋 Recibe un saludo personalizado del bot'),
 
   async execute(interaction, client) {
-    const randomSaludo = saludos[Math.floor(Math.random() * saludos.length)];
-    const saludo = randomSaludo.replace('{user}', interaction.user.username);
+    const usuario = interaction.options.getUser('usuario') || interaction.user;
+
+    const respuestasAleatorias = [
+      `¡Hola ${usuario}! 🌟 Espero que tengas un día extraordinario lleno de aventuras y descubrimientos.`,
+      `¡Saludos, ${usuario}! 🎉 Que la creatividad y la inspiración te acompañen en todo lo que hagas hoy.`,
+      `¡Hey ${usuario}! 🌈 Recuerda que cada nuevo día es una oportunidad para crear algo increíble.`,
+      `¡Hola, increíble ${usuario}! 🚀 Tu presencia ilumina este servidor como una estrella en la noche.`,
+      `¡Qué alegría verte, ${usuario}! 🎨 Espero que encuentres momentos de paz y felicidad en este día.`,
+      `¡Saludos cósmicos, ${usuario}! 🌌 Que la sabiduría del universo guíe tus pasos hacia el éxito.`,
+      `¡Hola, explorador digital ${usuario}! 🔍 Cada interacción es un paso hacia nuevas posibilidades.`,
+      `¡Bienvenido a este momento, ${usuario}! ⭐ Tu energía positiva hace que el mundo sea mejor.`,
+      `¡Hola, visionario ${usuario}! 🔮 Que tus ideas se conviertan en realidades asombrosas.`,
+      `¡Saludos, ${usuario}! 🌸 Como una flor que florece, que tu día se llene de belleza y crecimiento.`
+    ];
+
+    const mensajeAleatorio = respuestasAleatorias[Math.floor(Math.random() * respuestasAleatorias.length)];
 
     const embed = new EmbedBuilder()
-      .setDescription(saludo)
+      .setTitle('👋 ¡Saludo Inteligente!')
+      .setDescription(mensajeAleatorio)
       .setColor('#9966ff')
+      .setThumbnail(usuario.displayAvatarURL())
+      .setFooter({ text: 'Mensaje generado por IA VK Community' })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
@@ -33,9 +49,31 @@ module.exports = {
 
   name: 'hola',
   async run(message, args, client) {
-    const randomSaludo = saludos[Math.floor(Math.random() * saludos.length)];
-    const saludo = randomSaludo.replace('{user}', message.author.username);
-    
-    await message.channel.send(saludo);
+    const usuario = message.mentions.users.first() || message.author;
+
+    const respuestasAleatorias = [
+      `¡Hola ${usuario}! 🌟 Espero que tengas un día extraordinario lleno de aventuras y descubrimientos.`,
+      `¡Saludos, ${usuario}! 🎉 Que la creatividad y la inspiración te acompañen en todo lo que hagas hoy.`,
+      `¡Hey ${usuario}! 🌈 Recuerda que cada nuevo día es una oportunidad para crear algo increíble.`,
+      `¡Hola, increíble ${usuario}! 🚀 Tu presencia ilumina este servidor como una estrella en la noche.`,
+      `¡Qué alegría verte, ${usuario}! 🎨 Espero que encuentres momentos de paz y felicidad en este día.`,
+      `¡Saludos cósmicos, ${usuario}! 🌌 Que la sabiduría del universo guíe tus pasos hacia el éxito.`,
+      `¡Hola, explorador digital ${usuario}! 🔍 Cada interacción es un paso hacia nuevas posibilidades.`,
+      `¡Bienvenido a este momento, ${usuario}! ⭐ Tu energía positiva hace que el mundo sea mejor.`,
+      `¡Hola, visionario ${usuario}! 🔮 Que tus ideas se conviertan en realidades asombrosas.`,
+      `¡Saludos, ${usuario}! 🌸 Como una flor que florece, que tu día se llene de belleza y crecimiento.`
+    ];
+
+    const mensajeAleatorio = respuestasAleatorias[Math.floor(Math.random() * respuestasAleatorias.length)];
+
+    const embed = new EmbedBuilder()
+      .setTitle('👋 ¡Saludo Inteligente!')
+      .setDescription(mensajeAleatorio)
+      .setColor('#9966ff')
+      .setThumbnail(usuario.displayAvatarURL())
+      .setFooter({ text: 'Mensaje generado por IA VK Community' })
+      .setTimestamp();
+
+    await message.reply({ embeds: [embed] });
   }
 };

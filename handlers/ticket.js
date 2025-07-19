@@ -72,25 +72,45 @@ module.exports = {
               [userId, ticketChannel.id, tipo, new Date().toISOString()]
             );
 
+            const tipoInfo = TICKET_TYPES.find(t => t.id === tipo);
             const welcomeEmbed = new EmbedBuilder()
               .setTitle("🎫 Ticket Creado")
-              .setDescription(`¡Hola <@${userId}>! Tu ticket ha sido creado exitosamente.\n\n**📋 Tipo:** ${TICKET_TYPES.find(t => t.id === tipo)?.label}`)
+              .setDescription(`¡Hola <@${userId}>! Tu ticket ha sido creado exitosamente.`)
+              .addFields(
+                { name: '📋 Tipo de Ticket', value: tipoInfo?.label || 'Desconocido', inline: true },
+                { name: '📝 Descripción', value: tipoInfo?.description || 'Sin descripción', inline: true },
+                { name: '🕐 Fecha de Creación', value: `<t:${Math.floor(Date.now()/1000)}:F>`, inline: false },
+                { name: '📢 Instrucciones', value: 'Un miembro del staff te atenderá pronto.\nPuedes proporcionar más detalles mientras esperas.', inline: false },
+                { name: '⚡ Prioridad', value: 'Normal', inline: true },
+                { name: '👤 Estado', value: 'Abierto', inline: true }
+              )
               .setColor("#5865F2")
+              .setFooter({ text: `ID: ${ticketChannel.id} • VK Community Support` })
               .setTimestamp();
 
-            const closeButton = new ActionRowBuilder().addComponents(
+            const actionRow = new ActionRowBuilder().addComponents(
+              new ButtonBuilder()
+                .setCustomId("ticket_claim")
+                .setLabel("Reclamar")
+                .setStyle(ButtonStyle.Success)
+                .setEmoji("👋"),
               new ButtonBuilder()
                 .setCustomId("ticket_close")
-                .setLabel("Cerrar Ticket")
+                .setLabel("Cerrar")
                 .setStyle(ButtonStyle.Danger)
-                .setEmoji("🔒")
-            );
+                .setEmoji("🔒"),
+              new ButtonBuilder()
+                .setCustomId("ticket_priority")
+                .setLabel("Prioridad")
+                .setStyle(ButtonStyle.Secondary)
+                .setEmoji("⚡")
+            );</old_str>
 
             await ticketChannel.send({
               content: `<@${userId}> <@&${STAFF_ROLE_ID}>`,
               embeds: [welcomeEmbed],
-              components: [closeButton],
-            });
+              components: [actionRow],
+            });</old_str>
 
             await interaction.reply({
               content: `✅ Ticket creado: ${ticketChannel}`,
@@ -145,6 +165,114 @@ module.exports = {
         ephemeral: true,
       });
     }
+
+    if (interaction.customId === 'ticket_claim') {
+      const { STAFF_ROLE_ID, ADMIN_ROLE_ID } = client.config;
+      
+      // Verificar si es staff
+      if (!interaction.member.roles.cache.has(STAFF_ROLE_ID) && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
+        return interaction.reply({
+          content: "❌ Solo el staff puede reclamar tickets.",
+          ephemeral: true,
+        });
+      }
+
+      // Actualizar base de datos
+      ticketsDb.run(
+        `UPDATE tickets SET assigned_to = ? WHERE channel_id = ?`,
+        [interaction.user.id, interaction.channel.id],
+        async (err) => {
+          if (err) {
+            return interaction.reply({
+              content: "❌ Error al reclamar el ticket.",
+              ephemeral: true,
+            });
+          }
+
+          const claimEmbed = new EmbedBuilder()
+            .setTitle("👋 Ticket Reclamado")
+            .setDescription(`Este ticket ha sido reclamado por ${interaction.user}`)
+            .addFields(
+              { name: '👤 Staff Asignado', value: `${interaction.user.tag}`, inline: true },
+              { name: '🕐 Fecha', value: `<t:${Math.floor(Date.now()/1000)}:F>`, inline: true }
+            )
+            .setColor("#00ff00")
+            .setTimestamp();
+
+          await interaction.reply({ embeds: [claimEmbed] });
+        }
+      );
+    }
+
+    if (interaction.customId === 'ticket_priority') {
+      const { STAFF_ROLE_ID, ADMIN_ROLE_ID } = client.config;
+      
+      if (!interaction.member.roles.cache.has(STAFF_ROLE_ID) && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
+        return interaction.reply({
+          content: "❌ Solo el staff puede cambiar la prioridad.",
+          ephemeral: true,
+        });
+      }
+
+      const priorityRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId("ticket_priority_low")
+          .setLabel("Baja")
+          .setStyle(ButtonStyle.Success)
+          .setEmoji("🟢"),
+        new ButtonBuilder()
+          .setCustomId("ticket_priority_normal")
+          .setLabel("Normal")
+          .setStyle(ButtonStyle.Primary)
+          .setEmoji("🔵"),
+        new ButtonBuilder()
+          .setCustomId("ticket_priority_high")
+          .setLabel("Alta")
+          .setStyle(ButtonStyle.Danger)
+          .setEmoji("🔴")
+      );
+
+      await interaction.reply({
+        content: "⚡ Selecciona la nueva prioridad:",
+        components: [priorityRow],
+        ephemeral: true,
+      });
+    }
+
+    // Manejadores de prioridad
+    if (interaction.customId.startsWith('ticket_priority_')) {
+      const priority = interaction.customId.replace('ticket_priority_', '');
+      const priorityLabels = {
+        'low': '🟢 Baja',
+        'normal': '🔵 Normal', 
+        'high': '🔴 Alta'
+      };
+
+      ticketsDb.run(
+        `UPDATE tickets SET priority = ? WHERE channel_id = ?`,
+        [priority, interaction.channel.id],
+        async (err) => {
+          if (err) {
+            return interaction.update({
+              content: "❌ Error al cambiar la prioridad.",
+              components: [],
+            });
+          }
+
+          const priorityEmbed = new EmbedBuilder()
+            .setTitle("⚡ Prioridad Actualizada")
+            .setDescription(`La prioridad del ticket ha sido cambiada a: **${priorityLabels[priority]}**`)
+            .setColor(priority === 'high' ? '#e74c3c' : priority === 'normal' ? '#3498db' : '#2ecc71')
+            .setTimestamp();
+
+          await interaction.update({
+            content: "",
+            embeds: [priorityEmbed],
+            components: [],
+          });
+        }
+      );
+    }
   }
 };
 
@@ -162,31 +290,77 @@ async function closeTicket(channel, user, reason, ticketsDb, client) {
           [new Date().toISOString(), channel.id]
         );
 
-        // Crear transcripción
+        // Crear transcripción mejorada
         const messages = await channel.messages.fetch({ limit: 100 });
         const transcript = messages
           .filter(m => !m.author.bot)
           .sort((a, b) => a.createdTimestamp - b.createdTimestamp)
-          .map(msg => `[${new Date(msg.createdTimestamp).toLocaleString()}] ${msg.author.tag}: ${msg.content || "[Adjunto/Embed]"}`)
+          .map(msg => {
+            const timestamp = new Date(msg.createdTimestamp).toLocaleString();
+            const content = msg.content || "[Archivo adjunto o embed]";
+            return `[${timestamp}] ${msg.author.tag}: ${content}`;
+          })
           .join("\n");
 
         const buffer = Buffer.from(transcript, "utf-8");
         const attachment = new AttachmentBuilder(buffer, { name: `transcript-${channel.name}.txt` });
 
-        // Log
+        // Notificar al usuario por DM
+        try {
+          const ticketUser = client.users.cache.get(row.user_id);
+          if (ticketUser) {
+            const dmEmbed = new EmbedBuilder()
+              .setTitle("🔒 Tu ticket ha sido cerrado")
+              .setDescription(`Tu ticket en **${channel.guild.name}** ha sido cerrado.`)
+              .addFields(
+                { name: '🎫 Tipo', value: row.type || 'General', inline: true },
+                { name: '👤 Cerrado por', value: user.tag, inline: true },
+                { name: '📅 Fecha de cierre', value: `<t:${Math.floor(Date.now()/1000)}:F>`, inline: false },
+                { name: '💬 Razón', value: reason || 'No especificada', inline: false }
+              )
+              .setColor('#e74c3c')
+              .setFooter({ text: 'Gracias por contactar con VK Community Support' })
+              .setTimestamp();
+
+            await ticketUser.send({ embeds: [dmEmbed], files: [attachment] });
+          }
+        } catch (dmError) {
+          console.log('No se pudo enviar DM al usuario del ticket');
+        }
+
+        // Log mejorado
         const logsChannel = channel.guild.channels.cache.get(client.config.TICKETS_LOGS_CHANNEL_ID);
         if (logsChannel) {
           const logEmbed = new EmbedBuilder()
             .setTitle("🔒 Ticket Cerrado")
-            .setDescription(`**Canal:** ${channel.name}\n**Cerrado por:** ${user}`)
+            .setDescription("Detalles del ticket cerrado")
+            .addFields(
+              { name: '🎫 Canal', value: channel.name, inline: true },
+              { name: '👤 Usuario', value: `<@${row.user_id}>`, inline: true },
+              { name: '🗂️ Tipo', value: row.type || 'General', inline: true },
+              { name: '👮 Cerrado por', value: user.toString(), inline: true },
+              { name: '⚡ Prioridad', value: row.priority || 'normal', inline: true },
+              { name: '🕐 Duración', value: row.created_at ? `<t:${Math.floor(new Date(row.created_at).getTime()/1000)}:R>` : 'Desconocida', inline: true },
+              { name: '💬 Razón', value: reason || 'No especificada', inline: false }
+            )
             .setColor("#e74c3c")
             .setTimestamp();
 
           await logsChannel.send({ embeds: [logEmbed], files: [attachment] });
         }
 
-        await channel.send("🔒 Ticket cerrado. Eliminando en 5 segundos...");
-        setTimeout(() => channel.delete().catch(console.error), 5000);
+        const closeEmbed = new EmbedBuilder()
+          .setTitle('🔒 Ticket Cerrado')
+          .setDescription(`Este ticket ha sido cerrado por ${user}`)
+          .addFields(
+            { name: '⏰ Elimininación', value: 'El canal se eliminará en 10 segundos', inline: true },
+            { name: '📋 Transcripción', value: 'Se ha enviado una copia al usuario y logs', inline: true }
+          )
+          .setColor('#e74c3c')
+          .setTimestamp();
+
+        await channel.send({ embeds: [closeEmbed] });
+        setTimeout(() => channel.delete().catch(console.error), 10000);
       }
     );
   } catch (error) {
