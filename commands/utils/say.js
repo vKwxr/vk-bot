@@ -1,4 +1,3 @@
-
 const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
 
 module.exports = {
@@ -80,37 +79,22 @@ module.exports = {
 
   name: 'say',
   async run(message, args, client) {
-    // Verificar permisos
     if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
-      return message.reply('❌ Necesitas permisos de **Gestionar Mensajes** para usar este comando.');
+      return message.reply('❌ **No tienes permisos para usar este comando**');
     }
 
-    if (args.length === 0) {
-      return message.reply('❌ Especifica un mensaje para enviar.\nUso: `vksay <mensaje>`');
+    if (!args.length) {
+      return message.reply('❌ **Debes proporcionar un mensaje**\n📝 Uso: `vk say <mensaje>`');
     }
 
     const texto = args.join(' ');
 
-    // Filtrar contenido inapropiado
-    const palabrasProhibidas = ['@everyone', '@here', 'discord.gg/', 'https://discord.com/'];
-    const contieneProhibida = palabrasProhibidas.some(palabra => 
-      texto.toLowerCase().includes(palabra.toLowerCase())
-    );
-
-    if (contieneProhibida) {
-      return message.reply('❌ El mensaje contiene contenido no permitido.');
-    }
-
     try {
-      // Eliminar el mensaje original
-      await message.delete().catch(() => {});
-      
-      // Enviar el nuevo mensaje
       await message.channel.send(texto);
-
+      await message.delete().catch(() => {}); // Intentar borrar pero no fallar si no se puede
     } catch (error) {
-      console.error(error);
-      await message.channel.send('❌ Error al enviar el mensaje.');
+      console.error('Error en comando say:', error);
+      message.reply('❌ **Error al enviar el mensaje**');
     }
   }
 };

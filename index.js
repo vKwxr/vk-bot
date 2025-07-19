@@ -272,37 +272,30 @@ async function deployCommands() {
   try {
     console.log(`🔄 Registrando ${commands.length} comandos slash...`);
 
-    // Primero obtener comandos existentes
-    const existingCommands = await rest.get(
-      Routes.applicationCommands(process.env.CLIENT_ID)
-    );
-
-    // Mantener comandos de entry point si existen
-    const entryPointCommands = existingCommands.filter(cmd => 
-      cmd.integration_types_config && 
-      cmd.integration_types_config.hasOwnProperty('0')
-    );
-
-    const allCommands = [...commands, ...entryPointCommands];
-
+    // Simplemente registrar todos los comandos
     await rest.put(
       Routes.applicationCommands(process.env.CLIENT_ID),
-      { body: allCommands }
+      { body: commands }
     );
 
     console.log('✅ Comandos slash registrados correctamente.');
   } catch (error) {
     console.error('❌ Error registrando comandos:', error);
-    // Intentar método alternativo
+    // Si hay error con bulk update, intentar borrar todos y recrear
     try {
-      console.log('🔄 Intentando registro individual...');
-      for (const command of commands) {
-        await rest.post(
-          Routes.applicationCommands(process.env.CLIENT_ID),
-          { body: command }
-        );
-      }
-      console.log('✅ Comandos registrados individualmente.');
+      console.log('🔄 Limpiando comandos existentes...');
+      await rest.put(
+        Routes.applicationCommands(process.env.CLIENT_ID),
+        { body: [] }
+      );
+      
+      console.log('🔄 Registrando comandos nuevamente...');
+      await rest.put(
+        Routes.applicationCommands(process.env.CLIENT_ID),
+        { body: commands }
+      );
+      
+      console.log('✅ Comandos registrados después de limpieza.');
     } catch (altError) {
       console.error('❌ Error en método alternativo:', altError);
     }

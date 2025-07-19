@@ -108,7 +108,7 @@ module.exports = {
                   { name: '🆕 Nuevo nivel', value: `${newLevel}`, inline: true },
                   { name: '💫 XP total', value: `${newXp}`, inline: true }
                 )
-                .setColor('#gold')
+                .setColor('#FFD700')
                 .setThumbnail(message.author.displayAvatarURL())
                 .setTimestamp();
 

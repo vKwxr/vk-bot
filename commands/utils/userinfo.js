@@ -1,4 +1,3 @@
-
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
@@ -13,7 +12,7 @@ module.exports = {
   async execute(interaction, client) {
     const user = interaction.options.getUser('usuario') || interaction.user;
     const member = await interaction.guild.members.fetch(user.id).catch(() => null);
-    
+
     const embed = new EmbedBuilder()
       .setTitle(`👤 Información de ${user.username}`)
       .setThumbnail(user.displayAvatarURL({ dynamic: true }))
@@ -45,9 +44,9 @@ module.exports = {
       user = await client.users.fetch(userId).catch(() => null);
     }
     user = user || message.author;
-    
+
     const member = await message.guild.members.fetch(user.id).catch(() => null);
-    
+
     const embed = new EmbedBuilder()
       .setTitle(`👤 Información de ${user.username}`)
       .setThumbnail(user.displayAvatarURL({ dynamic: true }))
