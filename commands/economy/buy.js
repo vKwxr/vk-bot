@@ -220,9 +220,16 @@ module.exports = {
               );
             }
 
+            let description = `Has comprado **${item.emoji} ${item.name}**`;
+
+            // Si es un rol o color, agregar mensaje sobre ticket
+            if (item.category === 'roles' || item.category === 'colores' || item.name.toLowerCase().includes('rol') || item.name.toLowerCase().includes('color')) {
+              description += '\n\n🎫 **Se creará un ticket automáticamente para que reclames tu recompensa.**';
+            }
+
             const embed = new EmbedBuilder()
               .setTitle('🛒 Compra Exitosa')
-              .setDescription(`Has comprado **${item.emoji} ${item.name}**`)
+              .setDescription(description)
               .addFields(
                 { name: '💰 Precio', value: `${item.price} monedas`, inline: true },
                 { name: '💵 Dinero Restante', value: `${newWallet} monedas`, inline: true }

@@ -32,7 +32,8 @@ module.exports = {
 
   async handleAsk(context, pregunta) {
     const isInteraction = context.replied !== undefined;
-    const { db } = client.config || context.client.config;
+    const client = context.client || (context.guild && context.guild.client);
+    const { db } = client.config;
 
     try {
       // Obtener información del usuario que pregunta
@@ -46,7 +47,7 @@ module.exports = {
       let imageUrl = null;
       
       if (needsImage) {
-        imageUrl = await this.getContextualImage(pregunta);
+        imageUrl = await this.getContextualImage(pregunta, client);
       }
 
       const embed = new EmbedBuilder()
@@ -126,20 +127,35 @@ module.exports = {
     return visualKeywords.some(keyword => pregunta.toLowerCase().includes(keyword));
   },
 
-  async getContextualImage(pregunta) {
-    const images = {
-      'meme': 'https://media.giphy.com/media/3oEjI6SIIHBdRxXI40/giphy.gif',
-      'celebration': 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif',
-      'thinking': 'https://media.giphy.com/media/l0HlR2Q80bGAEBSrS/giphy.gif',
-      'default': 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif'
-    };
+  async getContextualImage(pregunta, client) {
+    try {
+      const { GIPHY_API_KEY } = client.config;
+      let searchTerm = 'thinking';
+      
+      const lowerPregunta = pregunta.toLowerCase();
+      if (lowerPregunta.includes('meme')) searchTerm = 'meme';
+      else if (lowerPregunta.includes('celebr') || lowerPregunta.includes('fiesta')) searchTerm = 'celebration';
+      else if (lowerPregunta.includes('triste')) searchTerm = 'sad';
+      else if (lowerPregunta.includes('feliz')) searchTerm = 'happy';
+      else if (lowerPregunta.includes('enojado')) searchTerm = 'angry';
 
-    for (const [key, url] of Object.entries(images)) {
-      if (pregunta.toLowerCase().includes(key)) {
-        return url;
+      const response = await axios.get(`https://api.giphy.com/v1/gifs/search`, {
+        params: {
+          api_key: GIPHY_API_KEY,
+          q: searchTerm,
+          limit: 10,
+          rating: 'pg'
+        }
+      });
+
+      if (response.data.data && response.data.data.length > 0) {
+        const randomGif = response.data.data[Math.floor(Math.random() * response.data.data.length)];
+        return randomGif.images.original.url;
       }
+    } catch (error) {
+      console.error('Error obteniendo GIF de Giphy:', error);
     }
     
-    return images.default;
+    return 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif';
   }
 };
