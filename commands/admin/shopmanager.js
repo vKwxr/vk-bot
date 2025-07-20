@@ -1,4 +1,3 @@
-
 const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
 
 module.exports = {
@@ -249,3 +248,22 @@ module.exports = {
     }
   }
 };
+
+// Insertar algunos items por defecto si la tienda está vacía
+      economyDb.get('SELECT COUNT(*) as count FROM shop_items', [], (err, row) => {
+        if (!err && row.count === 0) {
+          const defaultItems = [
+            ['VIP Role', 5000, 'Rol VIP exclusivo del servidor', '👑', 'roles', 1],
+            ['Custom Color', 2000, 'Color personalizado para tu nombre', '🎨', 'cosmetic', -1],
+            ['Extra XP Boost', 3000, 'Doble XP por 24 horas', '⚡', 'boosts', 10],
+            ['Crear Rol Personalizado', 20000, 'Permiso permanente para usar el comando /createrole - Crea roles personalizados con el nombre y color que quieras', '🎨', 'permisos', -1]
+          ];
+
+          defaultItems.forEach(item => {
+            economyDb.run(
+              'INSERT INTO shop_items (name, price, description, emoji, category, stock) VALUES (?, ?, ?, ?, ?, ?)',
+              item
+            );
+          });
+        }
+      });

@@ -7,6 +7,7 @@ const TICKET_TYPES = [
   { id: "sugerencia", label: "💡 Sugerencia", description: "Mejoras para el servidor", emoji: "💡" },
   { id: "apelacion", label: "⚖️ Apelación", description: "Apelar sanciones", emoji: "⚖️" },
   { id: "partnership", label: "🤝 Partnership", description: "Colaboraciones", emoji: "🤝" },
+  { id: "recompensa", label: "🛒 Recompensas", description: "Reclamar compras de la tienda", emoji: "🛒" },
   { id: "otro", label: "❓ Otro", description: "Otras consultas", emoji: "❓" },
 ];
 
@@ -74,7 +75,7 @@ module.exports = {
 
             const tipoInfo = TICKET_TYPES.find(t => t.id === tipo);
             const welcomeEmbed = new EmbedBuilder()
-              .setTitle("🎫 Ticket Creado")
+              .setTitle("🎫 VK Tickets")
               .setDescription(`¡Hola <@${userId}>! Tu ticket ha sido creado exitosamente.`)
               .addFields(
                 { name: '📋 Tipo de Ticket', value: tipoInfo?.label || 'Desconocido', inline: true },
@@ -104,13 +105,13 @@ module.exports = {
                 .setLabel("Prioridad")
                 .setStyle(ButtonStyle.Secondary)
                 .setEmoji("⚡")
-            );</old_str>
+            );
 
             await ticketChannel.send({
               content: `<@${userId}> <@&${STAFF_ROLE_ID}>`,
               embeds: [welcomeEmbed],
               components: [actionRow],
-            });</old_str>
+            });
 
             await interaction.reply({
               content: `✅ Ticket creado: ${ticketChannel}`,
@@ -169,7 +170,6 @@ module.exports = {
     if (interaction.customId === 'ticket_claim') {
       const { STAFF_ROLE_ID, ADMIN_ROLE_ID } = client.config;
       
-      // Verificar si es staff
       if (!interaction.member.roles.cache.has(STAFF_ROLE_ID) && !interaction.member.roles.cache.has(ADMIN_ROLE_ID)) {
         return interaction.reply({
           content: "❌ Solo el staff puede reclamar tickets.",
@@ -177,7 +177,6 @@ module.exports = {
         });
       }
 
-      // Actualizar base de datos
       ticketsDb.run(
         `UPDATE tickets SET assigned_to = ? WHERE channel_id = ?`,
         [interaction.user.id, interaction.channel.id],
@@ -239,7 +238,6 @@ module.exports = {
       });
     }
 
-    // Manejadores de prioridad
     if (interaction.customId.startsWith('ticket_priority_')) {
       const priority = interaction.customId.replace('ticket_priority_', '');
       const priorityLabels = {
@@ -284,13 +282,11 @@ async function closeTicket(channel, user, reason, ticketsDb, client) {
       async (err, row) => {
         if (err || !row) return;
 
-        // Actualizar estado
         ticketsDb.run(
           `UPDATE tickets SET status = 'cerrado', closed_at = ? WHERE channel_id = ?`,
           [new Date().toISOString(), channel.id]
         );
 
-        // Crear transcripción mejorada
         const messages = await channel.messages.fetch({ limit: 100 });
         const transcript = messages
           .filter(m => !m.author.bot)
@@ -305,7 +301,6 @@ async function closeTicket(channel, user, reason, ticketsDb, client) {
         const buffer = Buffer.from(transcript, "utf-8");
         const attachment = new AttachmentBuilder(buffer, { name: `transcript-${channel.name}.txt` });
 
-        // Notificar al usuario por DM
         try {
           const ticketUser = client.users.cache.get(row.user_id);
           if (ticketUser) {
@@ -328,7 +323,6 @@ async function closeTicket(channel, user, reason, ticketsDb, client) {
           console.log('No se pudo enviar DM al usuario del ticket');
         }
 
-        // Log mejorado
         const logsChannel = channel.guild.channels.cache.get(client.config.TICKETS_LOGS_CHANNEL_ID);
         if (logsChannel) {
           const logEmbed = new EmbedBuilder()
@@ -353,7 +347,7 @@ async function closeTicket(channel, user, reason, ticketsDb, client) {
           .setTitle('🔒 Ticket Cerrado')
           .setDescription(`Este ticket ha sido cerrado por ${user}`)
           .addFields(
-            { name: '⏰ Elimininación', value: 'El canal se eliminará en 10 segundos', inline: true },
+            { name: '⏰ Eliminación', value: 'El canal se eliminará en 10 segundos', inline: true },
             { name: '📋 Transcripción', value: 'Se ha enviado una copia al usuario y logs', inline: true }
           )
           .setColor('#e74c3c')
