@@ -1,4 +1,3 @@
-
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
@@ -62,7 +61,7 @@ module.exports = {
                 { name: '📈 Progreso al siguiente nivel', value: `${progressBar}\n${xpProgress}/1000 XP`, inline: false },
                 { name: '🎯 XP para nivel ${row.level + 1}', value: `${1000 - xpProgress} XP restante`, inline: true }
               )
-              .setColor('#gold')
+              .setColor('#FFD700')
               .setThumbnail(usuario.displayAvatarURL())
               .setFooter({ text: 'Sigue chateando para ganar más XP!' })
               .setTimestamp();
@@ -104,7 +103,7 @@ module.exports = {
               .addFields(
                 { name: '📈 Progreso', value: `${progressBar}\n${xpProgress}/1000 XP`, inline: false }
               )
-              .setColor('#gold')
+              .setColor('#FFD700')
               .setThumbnail(usuario.displayAvatarURL())
               .setTimestamp();
 
@@ -120,7 +119,7 @@ function createProgressBar(current, max, length = 20) {
   const percentage = Math.min(current / max, 1);
   const progress = Math.round(percentage * length);
   const empty = length - progress;
-  
+
   const progressBar = '█'.repeat(progress) + '░'.repeat(empty);
   return `[${progressBar}] ${Math.round(percentage * 100)}%`;
 }

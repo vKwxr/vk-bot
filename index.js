@@ -122,6 +122,11 @@ levelsDb.run(`CREATE TABLE IF NOT EXISTS levels (
   level INTEGER DEFAULT 1
 )`);
 
+levelsDb.run(`CREATE TABLE IF NOT EXISTS level_config (
+  guild_id TEXT PRIMARY KEY,
+  level_channel_id TEXT
+)`);
+
 economyDb.serialize(() => {
   economyDb.run(`CREATE TABLE IF NOT EXISTS economy (
     user_id TEXT PRIMARY KEY,

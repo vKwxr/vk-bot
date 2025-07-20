@@ -1,4 +1,3 @@
-
 const { EmbedBuilder } = require('discord.js');
 
 module.exports = {
@@ -34,7 +33,7 @@ module.exports = {
             .setTimestamp();
 
           const afkMessage = await message.channel.send({ embeds: [embed] });
-          
+
           // Eliminar mensaje después de 5 segundos
           setTimeout(() => afkMessage.delete().catch(() => {}), 5000);
         }
@@ -65,7 +64,7 @@ module.exports = {
                 .setTimestamp();
 
               const afkNotice = await message.channel.send({ embeds: [embed] });
-              
+
               // Eliminar aviso después de 10 segundos
               setTimeout(() => afkNotice.delete().catch(() => {}), 10000);
             }
@@ -78,7 +77,7 @@ module.exports = {
     if (message.guild) {
       // Dar XP aleatoria (15-25) por mensaje
       const xpGained = Math.floor(Math.random() * 10) + 15;
-      
+
       client.config.levelsDb.get(
         `SELECT * FROM levels WHERE user_id = ?`,
         [userId],
@@ -92,7 +91,7 @@ module.exports = {
           } else {
             const newXp = row.xp + xpGained;
             const newLevel = Math.floor(newXp / 1000) + 1; // Cada 1000 XP = 1 nivel
-            
+
             client.config.levelsDb.run(
               `UPDATE levels SET xp = ?, level = ? WHERE user_id = ?`,
               [newXp, newLevel, userId]
@@ -113,7 +112,7 @@ module.exports = {
                 .setTimestamp();
 
               const levelMessage = await message.channel.send({ embeds: [levelUpEmbed] });
-              
+
               // Eliminar después de 10 segundos
               setTimeout(() => levelMessage.delete().catch(() => {}), 10000);
             }

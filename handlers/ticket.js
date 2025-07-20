@@ -126,7 +126,7 @@ module.exports = {
           )
           .setColor("#5865F2")
           .setFooter({ text: `ID: ${ticketChannel.id} • VK Community Support` })
-          .setThumbnail('https://cdn.discordapp.com/avatars/1382318047020449853/avatar.png')
+          .setImage('https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExYnZjYnNmbTBpMXBmMDIwYjIwbWdzcnVtY2p2MjEwODV2YWl5MXk1MyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7NeoMpmd7Ie9l1cO5c/giphy.gif')
           .setTimestamp();
 
         const actionRow = new ActionRowBuilder().addComponents(

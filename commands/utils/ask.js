@@ -38,9 +38,22 @@ module.exports = {
     try {
       // Obtener información del usuario que pregunta
       const userId = (context.user || context.author).id;
+      const channelId = context.channel?.id;
+      
+      // Verificar si es una reply para continuar conversación
+      let isReply = false;
+      let conversationContext = '';
+      
+      if (!isInteraction && context.reference) {
+        const repliedMessage = await context.channel.messages.fetch(context.reference.messageId);
+        if (repliedMessage.author.id === client.user.id) {
+          isReply = true;
+          conversationContext = repliedMessage.embeds[0]?.description || '';
+        }
+      }
       
       // Procesar la pregunta para generar respuesta contextual
-      let respuesta = await this.generateAIResponse(pregunta, userId, db);
+      let respuesta = await this.generateAIResponse(pregunta, userId, db, isReply, conversationContext);
       
       // Determinar si necesita imagen o GIF
       const needsImage = this.needsVisualContent(pregunta);
@@ -50,11 +63,17 @@ module.exports = {
         imageUrl = await this.getContextualImage(pregunta, client);
       }
 
+      // Usar indicador de typing para ser más dinámico
+      if (!isInteraction) {
+        await context.channel.sendTyping();
+        await new Promise(resolve => setTimeout(resolve, 1500)); // Simular typing
+      }
+
       const embed = new EmbedBuilder()
-        .setTitle('🧠 VK AI')
+        .setTitle(isReply ? '🔄 VK AI (Conversación)' : '🧠 VK AI')
         .setDescription(respuesta)
         .setColor('#9966ff')
-        .setFooter({ text: 'VK AI • Respuesta inteligente generada' })
+        .setFooter({ text: isReply ? 'VK AI • Continuando conversación' : 'VK AI • Nueva conversación' })
         .setThumbnail('https://cdn.discordapp.com/avatars/1382318047020449853/avatar.png')
         .setTimestamp();
 
@@ -70,7 +89,7 @@ module.exports = {
       console.error('Error en comando ask:', error);
       const errorEmbed = new EmbedBuilder()
         .setTitle('❌ Error de VK AI')
-        .setDescription('No pude procesar tu pregunta en este momento. Inténtalo de nuevo.')
+        .setDescription('No pude procesar tu pregunta en este momento.')
         .setColor('#ff0000');
 
       return isInteraction 
@@ -79,37 +98,40 @@ module.exports = {
     }
   },
 
-  async generateAIResponse(pregunta, userId, db) {
+  async generateAIResponse(pregunta, userId, db, isReply = false, conversationContext = '') {
     const lowerPregunta = pregunta.toLowerCase();
     
-    // Saludos
-    if (lowerPregunta.match(/\b(hola|hi|hello|buenos días|buenas tardes|buenas noches|que tal|como estas)\b/)) {
-      const saludos = [
-        "¡Hola! 👋 Soy VK AI, tu asistente inteligente. ¿En qué puedo ayudarte hoy?",
-        "¡Qué tal! 😊 Estoy aquí para responder tus preguntas y ayudarte con lo que necesites.",
-        "¡Hola! 🤖 Soy la IA avanzada de VK Community. ¿Tienes alguna pregunta para mí?"
+    // Si es una reply, dar respuestas más directas y cortas
+    if (isReply && conversationContext) {
+      const respuestasCortas = [
+        `💭 Entiendo. Sobre "${pregunta}", creo que ${this.getShortResponse(pregunta)}.`,
+        `🤔 Interesante punto. ${this.getShortResponse(pregunta)}.`,
+        `👍 Exacto. ${this.getShortResponse(pregunta)}.`,
+        `📝 Correcto. ${this.getShortResponse(pregunta)}.`
       ];
-      return saludos[Math.floor(Math.random() * saludos.length)];
+      return respuestasCortas[Math.floor(Math.random() * respuestasCortas.length)];
     }
 
-    // Preguntas sobre el clima
+    // Saludos (más conciso)
+    if (lowerPregunta.match(/\b(hola|hi|hello|buenos días|buenas tardes|buenas noches|que tal|como estas)\b/)) {
+      return "¡Hola! 👋 Soy VK AI. ¿En qué puedo ayudarte?";
+    }
+
+    // Respuestas más cortas y directas
     if (lowerPregunta.includes('clima') || lowerPregunta.includes('tiempo')) {
-      return "🌤️ No tengo acceso a datos meteorológicos en tiempo real, pero te recomiendo usar una app del clima o Google para obtener información precisa sobre el tiempo en tu ubicación.";
+      return "🌤️ No tengo acceso a datos del clima. Usa Google o una app del tiempo.";
     }
 
-    // Preguntas sobre programación
-    if (lowerPregunta.match(/\b(programar|código|javascript|python|programación|desarrollo|software)\b/)) {
-      return "💻 ¡Me encanta hablar de programación! Puedo ayudarte con conceptos básicos, buenas prácticas y resolver dudas sobre diferentes lenguajes como JavaScript, Python, etc. ¿Hay algo específico que te gustaría saber?";
+    if (lowerPregunta.match(/\b(programar|código|javascript|python|programación|desarrollo)\b/)) {
+      return "💻 ¿Qué necesitas saber sobre programación? Puedo ayudarte con JavaScript, Python y más.";
     }
 
-    // Preguntas sobre matemáticas
-    if (lowerPregunta.match(/\b(matemáticas|calcular|suma|resta|multiplicar|dividir|ecuación)\b/)) {
-      return "🧮 Puedo ayudarte con matemáticas básicas y conceptos. Si necesitas cálculos específicos, puedes escribir la operación y te ayudo a resolverla.";
+    if (lowerPregunta.match(/\b(matemáticas|calcular|suma|resta|multiplicar|dividir)\b/)) {
+      return "🧮 ¿Qué cálculo necesitas? Puedo ayudarte con operaciones básicas.";
     }
 
-    // Preguntas sobre Discord
     if (lowerPregunta.includes('discord')) {
-      return "🎮 Discord es una plataforma increíble para comunidades. Aquí en VK Community tenemos muchas funciones geniales. ¿Te gustaría saber algo específico sobre Discord o sobre nuestro servidor?";
+      return "🎮 ¿Qué quieres saber sobre Discord o VK Community?";
     }
 
     // Verificar si pregunta sobre birthdays
@@ -144,16 +166,19 @@ module.exports = {
       return "🤔 Preguntas profundas... Como IA, veo el valor en las conexiones que creamos, el conocimiento que compartimos y las experiencias que vivimos juntos en comunidades como esta.";
     }
 
-    // Respuestas contextuales específicas
-    const respuestasInteligentes = [
-      `🧠 Interesante pregunta sobre "${pregunta}". Basándome en mi conocimiento, puedo decirte que esto es un tema complejo que puede tener múltiples perspectivas.`,
-      `🤖 He procesado tu consulta sobre "${pregunta}" y creo que la mejor forma de abordar esto es considerar diferentes factores y contextos.`,
-      `💭 Tu pregunta me hace reflexionar. Sobre "${pregunta}", puedo sugerir que explores diferentes enfoques y busques múltiples fuentes de información.`,
-      `📚 Respecto a "${pregunta}", mi análisis indica que esto requiere un enfoque cuidadoso y bien informado.`,
-      `🔍 He analizado tu pregunta sobre "${pregunta}" y considero que la respuesta depende del contexto específico y los objetivos que tengas.`
-    ];
+    // Respuestas más concisas
+    return this.getShortResponse(pregunta);
+  },
 
-    return respuestasInteligentes[Math.floor(Math.random() * respuestasInteligentes.length)];
+  getShortResponse(pregunta) {
+    const respuestas = [
+      `Es interesante. ¿Quieres más detalles?`,
+      `Depende del contexto. ¿Puedes ser más específico?`,
+      `Buena pregunta. ¿En qué aspecto te interesa más?`,
+      `Hay varias perspectivas sobre esto.`,
+      `¿Te refieres a algo específico?`
+    ];
+    return respuestas[Math.floor(Math.random() * respuestas.length)];
   },
 
   needsVisualContent(pregunta) {
@@ -164,30 +189,37 @@ module.exports = {
   async getContextualImage(pregunta, client) {
     try {
       const { GIPHY_API_KEY } = client.config;
+      if (!GIPHY_API_KEY) {
+        return 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif';
+      }
+
       let searchTerm = 'thinking';
       
       const lowerPregunta = pregunta.toLowerCase();
-      if (lowerPregunta.includes('meme')) searchTerm = 'meme';
-      else if (lowerPregunta.includes('celebr') || lowerPregunta.includes('fiesta')) searchTerm = 'celebration';
-      else if (lowerPregunta.includes('triste')) searchTerm = 'sad';
-      else if (lowerPregunta.includes('feliz')) searchTerm = 'happy';
-      else if (lowerPregunta.includes('enojado')) searchTerm = 'angry';
+      if (lowerPregunta.includes('meme')) searchTerm = 'funny meme';
+      else if (lowerPregunta.includes('celebr') || lowerPregunta.includes('fiesta')) searchTerm = 'celebration party';
+      else if (lowerPregunta.includes('triste')) searchTerm = 'sad crying';
+      else if (lowerPregunta.includes('feliz')) searchTerm = 'happy smile';
+      else if (lowerPregunta.includes('enojado')) searchTerm = 'angry mad';
+      else if (lowerPregunta.includes('pregunta')) searchTerm = 'question thinking';
 
       const response = await axios.get(`https://api.giphy.com/v1/gifs/search`, {
         params: {
           api_key: GIPHY_API_KEY,
           q: searchTerm,
-          limit: 10,
-          rating: 'pg'
-        }
+          limit: 20,
+          rating: 'pg',
+          lang: 'es'
+        },
+        timeout: 5000
       });
 
-      if (response.data.data && response.data.data.length > 0) {
+      if (response.data?.data && response.data.data.length > 0) {
         const randomGif = response.data.data[Math.floor(Math.random() * response.data.data.length)];
-        return randomGif.images.original.url;
+        return randomGif.images.downsized_medium?.url || randomGif.images.original.url;
       }
     } catch (error) {
-      console.error('Error obteniendo GIF de Giphy:', error);
+      console.error('Error obteniendo GIF de Giphy:', error.message);
     }
     
     return 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif';

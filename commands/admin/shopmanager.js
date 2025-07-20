@@ -246,10 +246,7 @@ module.exports = {
         }
       );
     }
-  }
-};
-
-},
+  },
 
   // Función para inicializar items por defecto
   initializeDefaultItems(economyDb) {
