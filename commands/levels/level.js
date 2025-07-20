@@ -1,6 +1,4 @@
-
-const { SlashCommandBuilder, EmbedBuilder, AttachmentBuilder } = require('discord.js');
-const { createCanvas, loadImage, registerFont } = require('canvas');
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -42,21 +40,38 @@ module.exports = {
       const { xp, level } = userData;
       const xpNeeded = level * 1000;
       const xpProgress = xp % 1000;
+      const progressPercentage = Math.floor((xpProgress / xpNeeded) * 100);
 
-      // Crear imagen de nivel personalizada
-      const attachment = await this.createLevelCard(targetUser, level, xpProgress, xpNeeded);
+      // Crear barra de progreso con emojis
+      const progressBar = this.createProgressBar(progressPercentage);
+
+      // Obtener posición en ranking
+      const rankPosition = await new Promise((resolve) => {
+        levelsDb.all('SELECT user_id, level, xp FROM levels ORDER BY level DESC, xp DESC', [], (err, rows) => {
+          if (err) resolve('N/A');
+          else {
+            const position = rows.findIndex(row => row.user_id === targetUser.id) + 1;
+            resolve(position || 'N/A');
+          }
+        });
+      });
 
       const embed = new EmbedBuilder()
         .setTitle(`🆙 Nivel de ${targetUser.username}`)
-        .setDescription(`**Nivel:** ${level}\n**XP:** ${xpProgress}/${xpNeeded}\n**XP Total:** ${xp}`)
-        .setColor('#9966ff')
-        .setImage('attachment://level-card.png')
+        .setDescription(`**Nivel:** ${level}\n**XP:** ${xpProgress}/${xpNeeded}\n**Progreso:** ${progressBar} ${progressPercentage}%`)
+        .addFields(
+          { name: '📊 XP Total', value: `${xp} XP`, inline: true },
+          { name: '🏆 Ranking', value: `#${rankPosition}`, inline: true },
+          { name: '🎯 Siguiente Nivel', value: `${xpNeeded - xpProgress} XP restantes`, inline: true }
+        )
+        .setColor(this.getLevelColor(level))
+        .setThumbnail(targetUser.displayAvatarURL({ dynamic: true, size: 256 }))
         .setFooter({ text: 'VK Community • Sistema de Niveles' })
         .setTimestamp();
 
       return isInteraction 
-        ? await context.reply({ embeds: [embed], files: [attachment] })
-        : await context.reply({ embeds: [embed], files: [attachment] });
+        ? await context.reply({ embeds: [embed] })
+        : await context.reply({ embeds: [embed] });
 
     } catch (error) {
       console.error('Error en comando level:', error);
@@ -71,69 +86,20 @@ module.exports = {
     }
   },
 
-  async createLevelCard(user, level, currentXP, neededXP) {
-    const canvas = createCanvas(800, 300);
-    const ctx = canvas.getContext('2d');
+  createProgressBar(percentage) {
+    const totalBars = 20;
+    const filledBars = Math.floor((percentage / 100) * totalBars);
+    const emptyBars = totalBars - filledBars;
 
-    // Fondo degradado
-    const gradient = ctx.createLinearGradient(0, 0, 800, 300);
-    gradient.addColorStop(0, '#9966ff');
-    gradient.addColorStop(1, '#6633cc');
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 800, 300);
+    return '█'.repeat(filledBars) + '░'.repeat(emptyBars);
+  },
 
-    // Avatar del usuario
-    try {
-      const avatarSize = user.displayAvatarURL({ format: 'png', size: 128 });
-      const avatar = await loadImage(avatarSize);
-      
-      // Círculo para el avatar
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(100, 150, 60, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(avatar, 40, 90, 120, 120);
-      ctx.restore();
-
-      // Borde del avatar
-      ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 4;
-      ctx.beginPath();
-      ctx.arc(100, 150, 60, 0, Math.PI * 2);
-      ctx.stroke();
-    } catch (error) {
-      console.error('Error cargando avatar:', error);
-    }
-
-    // Nombre del usuario
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 32px Arial';
-    ctx.fillText(user.username, 200, 100);
-
-    // Nivel
-    ctx.font = 'bold 24px Arial';
-    ctx.fillText(`Nivel ${level}`, 200, 140);
-
-    // Barra de progreso
-    const barWidth = 400;
-    const barHeight = 20;
-    const barX = 200;
-    const barY = 180;
-
-    // Fondo de la barra
-    ctx.fillStyle = '#333333';
-    ctx.fillRect(barX, barY, barWidth, barHeight);
-
-    // Progreso
-    const progress = currentXP / neededXP;
-    ctx.fillStyle = '#00ff00';
-    ctx.fillRect(barX, barY, barWidth * progress, barHeight);
-
-    // Texto de XP
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '18px Arial';
-    ctx.fillText(`${currentXP} / ${neededXP} XP`, barX, barY + 40);
-
-    return new AttachmentBuilder(canvas.toBuffer(), { name: 'level-card.png' });
+  getLevelColor(level) {
+    if (level >= 50) return '#ff0000'; // Rojo para niveles muy altos
+    if (level >= 30) return '#ff6600'; // Naranja para niveles altos
+    if (level >= 20) return '#ffaa00'; // Amarillo para niveles medios-altos
+    if (level >= 10) return '#00ff00'; // Verde para niveles medios
+    if (level >= 5) return '#0099ff';  // Azul para niveles bajos-medios
+    return '#9966ff'; // Morado para niveles bajos
   }
 };

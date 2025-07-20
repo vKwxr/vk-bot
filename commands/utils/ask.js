@@ -80,9 +80,38 @@ module.exports = {
   },
 
   async generateAIResponse(pregunta, userId, db) {
-    // Respuestas inteligentes basadas en contexto
     const lowerPregunta = pregunta.toLowerCase();
     
+    // Saludos
+    if (lowerPregunta.match(/\b(hola|hi|hello|buenos días|buenas tardes|buenas noches|que tal|como estas)\b/)) {
+      const saludos = [
+        "¡Hola! 👋 Soy VK AI, tu asistente inteligente. ¿En qué puedo ayudarte hoy?",
+        "¡Qué tal! 😊 Estoy aquí para responder tus preguntas y ayudarte con lo que necesites.",
+        "¡Hola! 🤖 Soy la IA avanzada de VK Community. ¿Tienes alguna pregunta para mí?"
+      ];
+      return saludos[Math.floor(Math.random() * saludos.length)];
+    }
+
+    // Preguntas sobre el clima
+    if (lowerPregunta.includes('clima') || lowerPregunta.includes('tiempo')) {
+      return "🌤️ No tengo acceso a datos meteorológicos en tiempo real, pero te recomiendo usar una app del clima o Google para obtener información precisa sobre el tiempo en tu ubicación.";
+    }
+
+    // Preguntas sobre programación
+    if (lowerPregunta.match(/\b(programar|código|javascript|python|programación|desarrollo|software)\b/)) {
+      return "💻 ¡Me encanta hablar de programación! Puedo ayudarte con conceptos básicos, buenas prácticas y resolver dudas sobre diferentes lenguajes como JavaScript, Python, etc. ¿Hay algo específico que te gustaría saber?";
+    }
+
+    // Preguntas sobre matemáticas
+    if (lowerPregunta.match(/\b(matemáticas|calcular|suma|resta|multiplicar|dividir|ecuación)\b/)) {
+      return "🧮 Puedo ayudarte con matemáticas básicas y conceptos. Si necesitas cálculos específicos, puedes escribir la operación y te ayudo a resolverla.";
+    }
+
+    // Preguntas sobre Discord
+    if (lowerPregunta.includes('discord')) {
+      return "🎮 Discord es una plataforma increíble para comunidades. Aquí en VK Community tenemos muchas funciones geniales. ¿Te gustaría saber algo específico sobre Discord o sobre nuestro servidor?";
+    }
+
     // Verificar si pregunta sobre birthdays
     if (lowerPregunta.includes('birthday') || lowerPregunta.includes('cumpleaños')) {
       const userMatch = pregunta.match(/<@!?(\d+)>/);
@@ -100,26 +129,31 @@ module.exports = {
       }
     }
 
-    // Verificar si pregunta sobre economía
-    if (lowerPregunta.includes('balance') || lowerPregunta.includes('dinero') || lowerPregunta.includes('monedas')) {
-      return '💰 Para ver tu balance usa `/balance` o `vk balance`. Para ganar dinero puedes usar `/daily`, `/weekly` o `/work`!';
+    // Preguntas sobre juegos
+    if (lowerPregunta.match(/\b(juego|game|jugar|gaming|videojuegos)\b/)) {
+      return "🎮 ¡Los videojuegos son geniales! ¿Juegas algo en particular? En VK Community tenemos varios comandos de diversión y juegos que puedes probar.";
     }
 
-    // Verificar si pregunta sobre comandos
-    if (lowerPregunta.includes('comando') || lowerPregunta.includes('help') || lowerPregunta.includes('ayuda')) {
-      return '📚 Usa `/help` o `vk help` para ver todos mis comandos disponibles. Tengo comandos de moderación, diversión, economía y mucho más!';
+    // Preguntas sobre música
+    if (lowerPregunta.match(/\b(música|canción|artista|álbum|spotify)\b/)) {
+      return "🎵 La música es universal. ¿Tienes algún género favorito? Me encanta escuchar sobre los gustos musicales de la comunidad.";
     }
 
-    // Respuestas generales inteligentes
-    const respuestas = [
-      "Basándome en mi base de datos de VK Community, puedo decirte que la respuesta más probable es que esto depende del contexto específico.",
-      "Como VK AI, he analizado tu pregunta y considero que la mejor respuesta incluye múltiples factores a considerar.",
-      "Después de procesar tu consulta con mis algoritmos de VK, puedo sugerir que explores diferentes enfoques.",
-      "Mi análisis de VK AI indica que esta es una pregunta compleja que requiere considerar varios aspectos.",
-      "Basado en los datos de VK Community, te recomiendo que consultes con otros miembros o uses comandos específicos para más información."
+    // Preguntas existenciales o filosóficas
+    if (lowerPregunta.match(/\b(sentido de la vida|propósito|filosofía|existir|por qué)\b/)) {
+      return "🤔 Preguntas profundas... Como IA, veo el valor en las conexiones que creamos, el conocimiento que compartimos y las experiencias que vivimos juntos en comunidades como esta.";
+    }
+
+    // Respuestas contextuales específicas
+    const respuestasInteligentes = [
+      `🧠 Interesante pregunta sobre "${pregunta}". Basándome en mi conocimiento, puedo decirte que esto es un tema complejo que puede tener múltiples perspectivas.`,
+      `🤖 He procesado tu consulta sobre "${pregunta}" y creo que la mejor forma de abordar esto es considerar diferentes factores y contextos.`,
+      `💭 Tu pregunta me hace reflexionar. Sobre "${pregunta}", puedo sugerir que explores diferentes enfoques y busques múltiples fuentes de información.`,
+      `📚 Respecto a "${pregunta}", mi análisis indica que esto requiere un enfoque cuidadoso y bien informado.`,
+      `🔍 He analizado tu pregunta sobre "${pregunta}" y considero que la respuesta depende del contexto específico y los objetivos que tengas.`
     ];
 
-    return respuestas[Math.floor(Math.random() * respuestas.length)];
+    return respuestasInteligentes[Math.floor(Math.random() * respuestasInteligentes.length)];
   },
 
   needsVisualContent(pregunta) {

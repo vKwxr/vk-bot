@@ -11,11 +11,6 @@ module.exports = {
         .setRequired(true)
         .setMaxLength(50)
     )
-    .addStringOption(option =>
-      option.setName('color')
-        .setDescription('Color del rol en hexadecimal (ejemplo: #ff0000)')
-        .setRequired(false)
-    )
     .addBooleanOption(option =>
       option.setName('separado')
         .setDescription('¿Mostrar el rol por separado en la lista de miembros?')
@@ -28,22 +23,20 @@ module.exports = {
 
   async execute(interaction, client) {
     const nombre = interaction.options.getString('nombre');
-    const color = interaction.options.getString('color') || '#99AAB5';
     const separado = interaction.options.getBoolean('separado') || false;
     
-    await this.handleCreateRole(interaction, interaction.user, nombre, color, separado, client);
+    await this.handleCreateRole(interaction, interaction.user, nombre, '#99AAB5', separado, client);
   },
 
   async run(message, args, client) {
     if (!args[0]) {
-      return message.reply('❌ **Debes proporcionar un nombre para el rol**\n📝 Uso: `vk createrole <nombre> [color] [separado]`');
+      return message.reply('❌ **Debes proporcionar un nombre para el rol**\n📝 Uso: `vk createrole <nombre> [separado]`');
     }
 
     const nombre = args[0];
-    const color = args[1] || '#99AAB5';
-    const separado = args[2]?.toLowerCase() === 'true' || args[2]?.toLowerCase() === 'si';
+    const separado = args[1]?.toLowerCase() === 'true' || args[1]?.toLowerCase() === 'si';
 
-    await this.handleCreateRole(message, message.author, nombre, color, separado, client);
+    await this.handleCreateRole(message, message.author, nombre, '#99AAB5', separado, client);
   },
 
   async handleCreateRole(context, user, nombre, color, separado, client) {

@@ -1,246 +1,170 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('buy')
-    .setDescription('🛒 Compra un artículo de la tienda')
+    .setDescription('💳 Comprar artículos de la tienda')
     .addStringOption(option =>
       option.setName('articulo')
         .setDescription('Nombre del artículo a comprar')
-        .setRequired(true))
-    .addIntegerOption(option =>
-      option.setName('cantidad')
-        .setDescription('Cantidad a comprar')
         .setRequired(false)
-        .setMinValue(1)
-        .setMaxValue(10)),
+    ),
+
+  name: 'buy',
+  description: 'Comprar artículos',
+  usage: 'vk buy [artículo]',
 
   async execute(interaction, client) {
-    try {
-      const { economyDb } = client.config;
-      const item = interaction.options.getString('articulo');
-      const userId = interaction.user.id;
-
-      if (!economyDb) {
-        return interaction.reply({
-          content: '❌ Error de base de datos. Contacta al administrador.',
-          ephemeral: true
-        });
-      }
-
-      // Buscar artículo
-      economyDb.get(
-        `SELECT * FROM shop_items WHERE name LIKE ? OR id = ?`,
-        [`%${item}%`, parseInt(item) || 0],
-        async (err, shopItem) => {
-          try {
-            if (err) {
-              console.error('Error buscando artículo:', err);
-              return interaction.reply({
-                content: '❌ Error al buscar el artículo.',
-                ephemeral: true
-              });
-            }
-
-            if (!shopItem) {
-              return interaction.reply({
-                content: '❌ Artículo no encontrado en la tienda. Usa `/shop` para ver los disponibles.',
-                ephemeral: true
-              });
-            }
-
-            // Verificar stock
-            if (shopItem.stock === 0) {
-              return interaction.reply({
-                content: '❌ Este artículo está agotado.',
-                ephemeral: true
-              });
-            }
-
-            // Verificar dinero del usuario
-            economyDb.get(
-              `SELECT * FROM economy WHERE user_id = ?`,
-              [userId],
-              async (err, userEconomy) => {
-                try {
-                  if (err) {
-                    console.error('Error verificando economía:', err);
-                    return interaction.reply({
-                      content: '❌ Error al verificar tu balance.',
-                      ephemeral: true
-                    });
-                  }
-
-                  // Crear registro de economía si no existe
-                  if (!userEconomy) {
-                    economyDb.run(
-                      `INSERT OR IGNORE INTO economy (user_id, wallet, bank) VALUES (?, 0, 0)`,
-                      [userId],
-                      (err) => {
-                        if (err) console.error('Error creando economía:', err);
-                      }
-                    );
-                    userEconomy = { wallet: 0, bank: 0 };
-                  }
-
-                  const userMoney = userEconomy.wallet || 0;
-
-                  if (userMoney < shopItem.price) {
-                    return interaction.reply({
-                      content: `❌ No tienes suficiente dinero. Necesitas **${shopItem.price}** monedas pero solo tienes **${userMoney}**.`,
-                      ephemeral: true
-                    });
-                  }
-
-                  // Realizar compra
-                  const newWallet = userMoney - shopItem.price;
-
-                  economyDb.run(
-                    `UPDATE economy SET wallet = ? WHERE user_id = ?`,
-                    [newWallet, userId],
-                    (err) => {
-                      try {
-                        if (err) {
-                          console.error('Error actualizando wallet:', err);
-                          return interaction.reply({
-                            content: '❌ Error al procesar la compra.',
-                            ephemeral: true
-                          });
-                        }
-
-                        // Actualizar stock si no es ilimitado
-                        if (shopItem.stock > 0) {
-                          economyDb.run(
-                            `UPDATE shop_items SET stock = stock - 1 WHERE id = ?`,
-                            [shopItem.id],
-                            (err) => {
-                              if (err) console.error('Error actualizando stock:', err);
-                            }
-                          );
-                        }
-
-                        // Agregar al inventario
-                        economyDb.run(
-                          `INSERT INTO user_inventory (user_id, item_id, quantity) VALUES (?, ?, 1)
-                           ON CONFLICT(user_id, item_id) DO UPDATE SET quantity = quantity + 1`,
-                          [userId, shopItem.id],
-                          (err) => {
-                            if (err) console.error('Error agregando al inventario:', err);
-                          }
-                        );
-
-                        const embed = new EmbedBuilder()
-                          .setTitle('🛍️ Compra Exitosa')
-                          .setDescription(`Has comprado **${shopItem.name}** ${shopItem.emoji}`)
-                          .addFields(
-                            { name: '💰 Precio Pagado', value: `${shopItem.price} monedas`, inline: true },
-                            { name: '💳 Dinero Restante', value: `${newWallet} monedas`, inline: true },
-                            { name: '📦 Descripción', value: shopItem.description, inline: false }
-                          )
-                          .setColor('#00ff00')
-                          .setFooter({ text: 'VK Community • Compra procesada' })
-                          .setTimestamp();
-
-                        interaction.reply({ embeds: [embed] });
-                      } catch (error) {
-                        console.error('Error en procesamiento de compra:', error);
-                        interaction.reply({
-                          content: '❌ Error inesperado al procesar la compra.',
-                          ephemeral: true
-                        });
-                      }
-                    }
-                  );
-                } catch (error) {
-                  console.error('Error en verificación de economía:', error);
-                  interaction.reply({
-                    content: '❌ Error inesperado en la verificación.',
-                    ephemeral: true
-                  });
-                }
-              }
-            );
-          } catch (error) {
-            console.error('Error en búsqueda de artículo:', error);
-            interaction.reply({
-              content: '❌ Error inesperado al buscar el artículo.',
-              ephemeral: true
-            });
-          }
-        }
-      );
-    } catch (error) {
-      console.error('Error general en comando buy:', error);
-      if (!interaction.replied) {
-        interaction.reply({
-          content: '❌ Error crítico al procesar la compra. Contacta al administrador.',
-          ephemeral: true
-        });
-      }
+    const articulo = interaction.options.getString('articulo');
+    if (articulo) {
+      await this.handleBuy(interaction, interaction.user, articulo, client);
+    } else {
+      await this.showShopMenu(interaction, client);
     }
   },
 
-  name: 'buy',
   async run(message, args, client) {
-    if (!args[0]) {
-      return message.reply('❌ Especifica el artículo a comprar.');
+    if (args.length === 0) {
+      return this.showShopMenu(message, client);
     }
 
-    const { economyDb } = client.config;
-    const userId = message.author.id;
     const articulo = args.join(' ');
+    await this.handleBuy(message, message.author, articulo, client);
+  },
 
-    economyDb.get(
-      `SELECT * FROM shop_items WHERE LOWER(name) LIKE LOWER(?)`,
-      [`%${articulo}%`],
-      async (err, item) => {
+  async showShopMenu(context, client) {
+    const { economyDb } = client.config;
+    const isInteraction = context.replied !== undefined;
+
+    economyDb.all('SELECT * FROM shop_items WHERE stock != 0 ORDER BY category, price', [], async (err, items) => {
+      if (err || !items.length) {
+        const embed = new EmbedBuilder()
+          .setTitle('❌ Tienda Vacía')
+          .setDescription('No hay artículos disponibles en la tienda.')
+          .setColor('#ff0000');
+
+        return isInteraction 
+          ? await context.reply({ embeds: [embed], ephemeral: true })
+          : await context.reply({ embeds: [embed] });
+      }
+
+      const embed = new EmbedBuilder()
+        .setTitle('🛒 Tienda VK - Compra Rápida')
+        .setDescription('Selecciona un artículo del menú para comprarlo directamente')
+        .setColor('#9966ff')
+        .setFooter({ text: 'VK Community • Sistema de Tienda' })
+        .setTimestamp();
+
+      const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId('quick_buy_select')
+        .setPlaceholder('🛍️ Selecciona un artículo para comprar')
+        .setMaxValues(1);
+
+      const categories = {};
+      items.forEach(item => {
+        if (!categories[item.category]) categories[item.category] = [];
+        categories[item.category].push(item);
+      });
+
+      Object.keys(categories).forEach(category => {
+        categories[category].forEach(item => {
+          const stock = item.stock === -1 ? '∞' : item.stock;
+          selectMenu.addOptions({
+            label: `${item.name} - $${item.price}`,
+            description: `${item.description.substring(0, 80)}... (Stock: ${stock})`,
+            value: `buy_${item.id}`,
+            emoji: item.emoji
+          });
+        });
+      });
+
+      const row = new ActionRowBuilder().addComponents(selectMenu);
+
+      return isInteraction 
+        ? await context.reply({ embeds: [embed], components: [row] })
+        : await context.reply({ embeds: [embed], components: [row] });
+    });
+  },
+
+  async handleBuy(context, user, itemName, client) {
+    const { economyDb } = client.config;
+    const isInteraction = context.replied !== undefined;
+
+    economyDb.get('SELECT * FROM economy WHERE user_id = ?', [user.id], (err, userEconomy) => {
+      if (err || !userEconomy) {
+        const embed = new EmbedBuilder()
+          .setTitle('❌ No tienes una cuenta')
+          .setDescription('Usa `/daily` para crear tu cuenta de economía.')
+          .setColor('#ff0000');
+
+        return isInteraction 
+          ? context.reply({ embeds: [embed], ephemeral: true })
+          : context.reply({ embeds: [embed] });
+      }
+
+      economyDb.get('SELECT * FROM shop_items WHERE LOWER(name) = LOWER(?)', [itemName], (err, item) => {
         if (err || !item) {
-          return message.reply('❌ Artículo no encontrado en la tienda.');
+          const embed = new EmbedBuilder()
+            .setTitle('❌ Artículo no encontrado')
+            .setDescription(`No se encontró "${itemName}" en la tienda.\nUsa \`/shop\` para ver los artículos disponibles.`)
+            .setColor('#ff0000');
+
+          return isInteraction 
+            ? context.reply({ embeds: [embed], ephemeral: true })
+            : context.reply({ embeds: [embed] });
         }
 
-        economyDb.get(
-          `SELECT * FROM economy WHERE user_id = ?`,
-          [userId],
-          async (err, userEconomy) => {
-            if (err || !userEconomy || userEconomy.wallet < item.price) {
-              return message.reply('❌ No tienes dinero suficiente.');
-            }
+        if (item.stock === 0) {
+          const embed = new EmbedBuilder()
+            .setTitle('❌ Sin Stock')
+            .setDescription(`${item.emoji} **${item.name}** está agotado.`)
+            .setColor('#ff0000');
 
-            const newWallet = userEconomy.wallet - item.price;
+          return isInteraction 
+            ? context.reply({ embeds: [embed], ephemeral: true })
+            : context.reply({ embeds: [embed] });
+        }
 
-            economyDb.run(
-              `UPDATE economy SET wallet = ? WHERE user_id = ?`,
-              [newWallet, userId]
-            );
+        if (userEconomy.wallet < item.price) {
+          const embed = new EmbedBuilder()
+            .setTitle('❌ Dinero Insuficiente')
+            .setDescription(`Necesitas **$${item.price}** pero solo tienes **$${userEconomy.wallet}**.`)
+            .setColor('#ff0000');
 
-            if (item.stock !== -1) {
-              economyDb.run(
-                `UPDATE shop_items SET stock = stock - 1 WHERE id = ?`,
-                [item.id]
-              );
-            }
+          return isInteraction 
+            ? context.reply({ embeds: [embed], ephemeral: true })
+            : context.reply({ embeds: [embed] });
+        }
 
-            let description = `Has comprado **${item.emoji} ${item.name}**`;
+        // Realizar compra
+        economyDb.run('UPDATE economy SET wallet = wallet - ? WHERE user_id = ?', [item.price, user.id]);
 
-            // Si es un rol o color, agregar mensaje sobre ticket
-            if (item.category === 'roles' || item.category === 'colores' || item.name.toLowerCase().includes('rol') || item.name.toLowerCase().includes('color')) {
-              description += '\n\n🎫 **Se creará un ticket automáticamente para que reclames tu recompensa.**';
-            }
+        if (item.stock > 0) {
+          economyDb.run('UPDATE shop_items SET stock = stock - 1 WHERE id = ?', [item.id]);
+        }
 
-            const embed = new EmbedBuilder()
-              .setTitle('🛒 Compra Exitosa')
-              .setDescription(description)
-              .addFields(
-                { name: '💰 Precio', value: `${item.price} monedas`, inline: true },
-                { name: '💵 Dinero Restante', value: `${newWallet} monedas`, inline: true }
-              )
-              .setColor('#00ff00')
-              .setTimestamp();
+        economyDb.run('INSERT INTO user_inventory (user_id, item_id, quantity) VALUES (?, ?, 1)', [user.id, item.id]);
 
-            await message.reply({ embeds: [embed] });
-          }
-        );
-      }
-    );
+        let extraInfo = '';
+        if (['roles', 'cosmetic', 'permisos'].includes(item.category)) {
+          extraInfo = '\n\n🎫 **¡Crea un ticket de tipo "Recompensas" para reclamar tu compra!**';
+        }
+
+        const embed = new EmbedBuilder()
+          .setTitle('✅ Compra Exitosa')
+          .setDescription(`Has comprado **${item.emoji} ${item.name}** por **$${item.price}**${extraInfo}`)
+          .addFields(
+            { name: '💰 Dinero Restante', value: `$${userEconomy.wallet - item.price}`, inline: true },
+            { name: '📦 Artículo', value: item.description, inline: false }
+          )
+          .setColor('#00ff00')
+          .setFooter({ text: 'VK Community • ¡Gracias por tu compra!' })
+          .setTimestamp();
+
+        return isInteraction 
+          ? context.reply({ embeds: [embed] })
+          : context.reply({ embeds: [embed] });
+      });
+    });
   }
 };

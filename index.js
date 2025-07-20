@@ -297,6 +297,18 @@ async function deployCommands() {
 loadCommands();
 loadEvents();
 
+// Inicializar items por defecto de la tienda
+setTimeout(() => {
+  try {
+    const shopManager = require('./commands/admin/shopmanager.js');
+    if (shopManager.initializeDefaultItems) {
+      shopManager.initializeDefaultItems(economyDb);
+    }
+  } catch (error) {
+    console.log('Items de tienda ya inicializados o error menor:', error.message);
+  }
+}, 2000);
+
 // Manejar interacciones
 client.on('interactionCreate', async interaction => {
   if (interaction.isChatInputCommand()) {

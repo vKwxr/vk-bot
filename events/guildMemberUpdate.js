@@ -1,67 +1,48 @@
-
 const { EmbedBuilder } = require('discord.js');
-const axios = require('axios');
 
 module.exports = {
   name: 'guildMemberUpdate',
-  
   async execute(oldMember, newMember, client) {
-    // Detectar si alguien boosteó el servidor
-    if (oldMember.premiumSince === null && newMember.premiumSince !== null) {
-      await this.handleNewBoost(newMember, client);
-    }
-  },
+    // Sistema de niveles por actividad en lugar de boost
+    if (newMember.user.bot) return;
 
-  async handleNewBoost(member, client) {
     try {
-      // Canal para enviar mensajes de boost (configurable)
-      const boostChannelId = '1394028954527989938'; // Cambia esto por el ID del canal
-      const boostChannel = member.guild.channels.cache.get(boostChannelId);
-      
-      if (!boostChannel) return;
+      const { levelsDb } = client.config;
 
-      // Obtener GIF aleatorio de celebración
-      const gifUrl = await this.getRandomBoostGif(client);
+      // Solo dar XP por actividad real (como estar en canales de voz)
+      if (newMember.voice.channel && !oldMember.voice.channel) {
+        levelsDb.get('SELECT * FROM levels WHERE user_id = ?', [newMember.id], (err, row) => {
+          if (err) return;
 
-      const embed = new EmbedBuilder()
-        .setTitle('🚀 ¡Nuevo Boost!')
-        .setDescription(`🎉 **${member.user.username}** acaba de boostear el servidor!\n\n💜 ¡Gracias por tu apoyo!`)
-        .setThumbnail(member.user.displayAvatarURL({ dynamic: true }))
-        .setImage(gifUrl)
-        .setColor('#ff73fa')
-        .setFooter({ text: 'VK Community • ¡Eres increíble!' })
-        .setTimestamp();
+          const currentXP = row ? row.xp : 0;
+          const currentLevel = row ? row.level : 1;
+          const xpGain = Math.floor(Math.random() * 15) + 5; // 5-20 XP por unirse a voz
+          const newXP = currentXP + xpGain;
+          const newLevel = Math.floor(newXP / 1000) + 1;
 
-      await boostChannel.send({ embeds: [embed] });
+          if (row) {
+            levelsDb.run('UPDATE levels SET xp = ?, level = ? WHERE user_id = ?', [newXP, newLevel, newMember.id]);
+          } else {
+            levelsDb.run('INSERT INTO levels (user_id, xp, level) VALUES (?, ?, ?)', [newMember.id, newXP, newLevel]);
+          }
 
-    } catch (error) {
-      console.error('Error manejando boost:', error);
-    }
-  },
+          // Notificar level up
+          if (newLevel > currentLevel) {
+            const levelUpEmbed = new EmbedBuilder()
+              .setTitle('🆙 ¡Subiste de Nivel!')
+              .setDescription(`¡Felicidades ${newMember}! Has alcanzado el **nivel ${newLevel}**`)
+              .setColor('#00ff00')
+              .setTimestamp();
 
-  async getRandomBoostGif(client) {
-    try {
-      const { GIPHY_API_KEY } = client.config;
-      const searchTerms = ['celebration', 'party', 'boost', 'rocket', 'fireworks'];
-      const randomTerm = searchTerms[Math.floor(Math.random() * searchTerms.length)];
-
-      const response = await axios.get(`https://api.giphy.com/v1/gifs/search`, {
-        params: {
-          api_key: GIPHY_API_KEY,
-          q: randomTerm,
-          limit: 20,
-          rating: 'pg'
-        }
-      });
-
-      if (response.data.data && response.data.data.length > 0) {
-        const randomGif = response.data.data[Math.floor(Math.random() * response.data.data.length)];
-        return randomGif.images.original.url;
+            const generalChannel = newMember.guild.channels.cache.find(ch => ch.name.includes('general') || ch.name.includes('chat'));
+            if (generalChannel) {
+              generalChannel.send({ embeds: [levelUpEmbed] });
+            }
+          }
+        });
       }
     } catch (error) {
-      console.error('Error obteniendo GIF de boost:', error);
+      console.error('Error en guildMemberUpdate:', error);
     }
-    
-    return 'https://media.giphy.com/media/l0MYt5jPR6QX5pnqM/giphy.gif';
-  }
+  },
 };
