@@ -30,43 +30,43 @@ module.exports = {
     }
 
     const embed = new EmbedBuilder()
-      .setTitle('🎫 Sistema de Tickets - VK Community')
-      .setDescription('¡Bienvenido al sistema de tickets de vK Bot!\n\n📋 **¿Cómo funciona?**\n1️⃣ Selecciona el tipo de ticket apropiado\n2️⃣ Confirma la creación del ticket\n3️⃣ Proporciona información detallada sobre tu consulta\n4️⃣ Espera a que un miembro del staff te atienda\n\n⚠️ **IMPORTANTE**\n• Solo crea tickets si realmente necesitas ayuda\n• Los tickets falsos o de broma pueden resultar en **sanciones**\n• Un usuario puede tener máximo **1 ticket abierto**\n• Los tickets se eliminan automáticamente tras cerrarlos')
+      .setTitle('🎫 Sistema de Tickets - vK Bot')
+      .setDescription('¡Bienvenido/a al sistema de tickets de nuestra guild\n\nAqui te puedes poner en contcto con el staff para resolver cualquier duda o problema que tengas\n\nselecciona en el menu de abajo cual es tu problema o consulta ')
       .addFields(
         { 
           name: '🛠️ Soporte Técnico', 
           value: '• Problemas con comandos del bot\n• Errores técnicos del servidor\n• Configuraciones que no funcionan', 
-          inline: true 
+          inline: false 
         },
         { 
           name: '🚨 Reportar Usuario', 
           value: '• Comportamiento inadecuado\n• Spam o toxicidad\n• Incumplimiento de reglas', 
-          inline: true 
+          inline: false 
         },
         { 
           name: '💡 Sugerencias', 
-          value: '• Ideas para mejorar el servidor\n• Nuevas funciones del bot\n• Propuestas de eventos', 
-          inline: true 
+          value: '• Ideas para mejorar el servidor\n• Nuevas funciones del bot\n• Propuestas de eventos/sorteos', 
+          inline: false 
         },
         { 
           name: '⚖️ Apelaciones', 
           value: '• Apelar warns o bans\n• Disputar sanciones\n• Solicitar revisión de casos', 
-          inline: true 
+          inline: false 
         },
         { 
           name: '🤝 Partnership', 
           value: '• Colaboraciones con otros servidores\n• Propuestas de alianzas\n• Intercambios promocionales', 
-          inline: true 
+          inline: false 
         },
         { 
           name: '🛒 Recompensas de Tienda', 
           value: '• Reclamar roles comprados\n• Problemas con compras\n• Solicitar recompensas', 
-          inline: true 
+          inline: false 
         },
         { 
           name: '❓ Otras Consultas', 
           value: '• Preguntas generales\n• Dudas sobre el servidor\n• Consultas no categorizadas', 
-          inline: true 
+          inline: false 
         },
         {
           name: '⏰ Horarios de Atención',
@@ -98,7 +98,7 @@ module.exports = {
         },
         {
           label: 'Sugerencia',
-          description: 'Proponer mejoras para el servidor',
+          description: 'Proponer ideas al staff',
           value: 'sugerencia',
           emoji: '💡'
         },

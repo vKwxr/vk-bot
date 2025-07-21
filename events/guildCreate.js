@@ -9,7 +9,7 @@ module.exports = {
     
     // Canal de logs principal (reemplaza con tu ID)
     const MAIN_LOGS_CHANNEL = '1394028954527989939'; // Reemplaza con tu canal de logs
-    const ADMIN_USER_ID = '1394028954079461488'; // Reemplaza con tu ID de admin
+    const ADMIN_USER_ID = '880567084436844594'; // Reemplaza con tu ID de admin
     
     const logsChannel = client.channels.cache.get(MAIN_LOGS_CHANNEL);
     

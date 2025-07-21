@@ -7,8 +7,7 @@ module.exports = {
   async execute(client) {
     console.log(`🤖 ${client.user.tag} está conectado!`);
     
-    // Configurar actividad
-    client.user.setActivity('🎮 Moderando VK Community', { type: 'WATCHING' });
+   client.user.setPresence("Playig a ser Millonario", { type: "PLAYING" });
 
     // Inicializar sistemas automáticos
     initBirthdayChecker(client);
@@ -115,11 +114,10 @@ function initBoostDetection(client) {
       if (boostChannel) {
         const embed = new EmbedBuilder()
           .setTitle('💎 ¡Nuevo Boost!')
-          .setDescription(`${newMember} acaba de boostear VK Community!\n\n¡Gracias por apoyar nuestra comunidad! 👑`)
+          .setDescription(`${newMember} acaba de boostear!\n\n¡Gracias por apoyar nuestra comunidad! 👑`)
           .setColor('#ff73fa')
           .setThumbnail(newMember.user.displayAvatarURL({ size: 256 }))
-          .setImage('https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExb3Z0d3J0b2Z0d2J3d3B2d2Z6a2Z1b3Z3d2Z3dGZ2d2Z3d2Z3/g9582DNuQppxC/giphy.gif')
-          .setFooter({ text: 'Boosts VK Community' })
+          .setFooter({ text: 'Boosts vK' })
           .setTimestamp();
 
         await boostChannel.send({ embeds: [embed] });

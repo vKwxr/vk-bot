@@ -66,7 +66,7 @@ module.exports = {
         )
         .setColor(this.getLevelColor(level))
         .setThumbnail(targetUser.displayAvatarURL({ dynamic: true, size: 256 }))
-        .setFooter({ text: 'VK Community • Sistema de Niveles' })
+        .setFooter({ text: 'vK • Sistema de Niveles' })
         .setTimestamp();
 
       return isInteraction 

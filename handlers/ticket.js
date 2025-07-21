@@ -1,6 +1,6 @@
 
 
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionsBitField, ChannelType, AttachmentBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionsBitField, ChannelType, AttachmentBuilder, StringSelectMenuBuilder, flatten } = require('discord.js');
 
 const TICKET_TYPES = [
   { id: "soporte", label: "🛠️ Soporte Técnico", description: "Problemas técnicos", emoji: "🛠️" },
@@ -49,7 +49,7 @@ module.exports = {
     });
 
     if (ticketExists) {
-      return interaction.reply({ content: "❌ Ya tienes un ticket abierto en este servidor.", ephemeral: true });
+      return interaction.reply({ content: "❌ Ya tienes un ticket abierto .", ephemeral: true });
     }
 
     const { STAFF_ROLE_ID, ADMIN_ROLE_ID, TICKETS_CATEGORY_ID, TICKETS_LOGS_CHANNEL_ID } = client.config;
@@ -81,7 +81,7 @@ module.exports = {
               { name: '⚠️ Importante', value: 'Crear tickets por error puede resultar en sanciones.\nAsegúrate de que realmente necesitas soporte.', inline: false }
             )
             .setColor('#ffaa00')
-            .setFooter({ text: 'VK Community • Sistema de Tickets' })
+            .setFooter({ text: '• Tickets vK' })
             .setTimestamp();
 
           const confirmRow = new ActionRowBuilder().addComponents(
@@ -152,18 +152,18 @@ module.exports = {
 
         const tipoInfo = TICKET_TYPES.find(t => t.id === tipo);
         const welcomeEmbed = new EmbedBuilder()
-          .setTitle("🎫 VK Tickets")
+          .setTitle("🎫 vK Tickets")
           .setDescription(`¡Hola <@${userId}>! Tu ticket ha sido creado exitosamente.`)
           .addFields(
             { name: '📋 Tipo de Ticket', value: tipoInfo?.label || 'Desconocido', inline: true },
             { name: '📝 Descripción', value: tipoInfo?.description || 'Sin descripción', inline: true },
             { name: '🕐 Fecha de Creación', value: `<t:${Math.floor(Date.now()/1000)}:F>`, inline: false },
-            { name: '📢 Instrucciones', value: 'Un miembro del staff te atenderá pronto.\nPuedes proporcionar más detalles mientras esperas.', inline: false },
+            { name: '📢 Instrucciones', value: 'Un miembro del staff te atenderá pronto.\nPuedes proporcionar los detalles de tu problema o duda mientras esperas.', inline: false },
             { name: '⚡ Prioridad', value: 'Normal', inline: true },
             { name: '👤 Estado', value: 'Abierto', inline: true }
           )
           .setColor("#5865F2")
-          .setFooter({ text: `ID: ${ticketChannel.id} • VK Community Support` })
+          .setFooter({ text: `ID: ${ticketChannel.id} • vK Support` })
           .setImage('https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExYnZjYnNmbTBpMXBmMDIwYjIwbWdzcnVtY2p2MjEwODV2YWl5MXk1MyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7NeoMpmd7Ie9l1cO5c/giphy.gif')
           .setTimestamp();
 
@@ -417,7 +417,7 @@ async function closeTicket(channel, user, reason, ticketsDb, client) {
           [new Date().toISOString(), channel.id]
         );
 
-        // Solo enviar notificación al usuario (SIN transcripción)
+        //  enviar notificación al usuario 
         try {
           const ticketUser = client.users.cache.get(row.user_id);
           if (ticketUser) {
@@ -431,7 +431,7 @@ async function closeTicket(channel, user, reason, ticketsDb, client) {
                 { name: '💬 Razón', value: reason || 'No especificada', inline: false }
               )
               .setColor('#e74c3c')
-              .setFooter({ text: 'Gracias por contactar con VK Community Support' })
+              .setFooter({ text: 'Gracias por contactar con vK Support' })
               .setTimestamp();
 
             await ticketUser.send({ embeds: [dmEmbed] });
@@ -440,7 +440,7 @@ async function closeTicket(channel, user, reason, ticketsDb, client) {
           console.log('No se pudo enviar DM al usuario del ticket');
         }
 
-        // Enviar transcripción completa solo a logs del staff
+        // Enviar transcripción completa logs del staff
         const messages = await channel.messages.fetch({ limit: 100 });
         const transcript = messages
           .filter(m => !m.author.bot || m.embeds.length === 0)

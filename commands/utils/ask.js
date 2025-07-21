@@ -101,26 +101,6 @@ module.exports = {
   async generateAIResponse(pregunta, userId, db, isReply = false, conversationContext = '') {
     const lowerPregunta = pregunta.toLowerCase();
     
-    // Si es una reply, dar respuestas más directas y cortas
-    if (isReply && conversationContext) {
-      const respuestasCortas = [
-        `💭 Entiendo. Sobre "${pregunta}", creo que ${this.getShortResponse(pregunta)}.`,
-        `🤔 Interesante punto. ${this.getShortResponse(pregunta)}.`,
-        `👍 Exacto. ${this.getShortResponse(pregunta)}.`,
-        `📝 Correcto. ${this.getShortResponse(pregunta)}.`
-      ];
-      return respuestasCortas[Math.floor(Math.random() * respuestasCortas.length)];
-    }
-
-    // Saludos (más conciso)
-    if (lowerPregunta.match(/\b(hola|hi|hello|buenos días|buenas tardes|buenas noches|que tal|como estas)\b/)) {
-      return "¡Hola! 👋 Soy VK AI. ¿En qué puedo ayudarte?";
-    }
-
-    // Respuestas más cortas y directas
-    if (lowerPregunta.includes('clima') || lowerPregunta.includes('tiempo')) {
-      return "🌤️ No tengo acceso a datos del clima. Usa Google o una app del tiempo.";
-    }
 
     if (lowerPregunta.match(/\b(programar|código|javascript|python|programación|desarrollo)\b/)) {
       return "💻 ¿Qué necesitas saber sobre programación? Puedo ayudarte con JavaScript, Python y más.";

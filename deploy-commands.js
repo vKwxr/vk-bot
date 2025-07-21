@@ -1,4 +1,3 @@
-
 const { REST, Routes } = require("discord.js");
 const fs = require("fs");
 require("dotenv").config();
@@ -20,11 +19,11 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
     console.log("🚀 Registrando comandos slash...");
 
     await rest.put(
-      Routes.applicationCommands(process.env.CLIENT_ID),
+      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
       { body: commands }
     );
 
-    console.log("✅ Comandos registrados correctamente.");
+    console.log("✅ Comandos registrados correctamente en el servidor.");
   } catch (error) {
     console.error("❌ Error al registrar comandos:", error);
   }

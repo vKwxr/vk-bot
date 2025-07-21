@@ -51,10 +51,10 @@ module.exports = {
         .setColor('#2ecc71')
         .addFields(
           { name: '👤 Usuario', value: realUsername, inline: true },
-          { name: '🎮 Plataforma', value: 'Minecraft Java', inline: true },
-          { name: '🆔 UUID', value: `\`${uuid.substring(0, 8)}...\``, inline: true }
+          { name: '🎮 Plataforma', value: 'Minecraft Java', inline: false },
+          { name: '🆔 UUID', value: `\`${uuid.substring(0, 8)}...\``, inline: false }
         )
-        .setFooter({ text: 'Powered by MC-Heads & Mojang API' })
+        .setFooter({ text: 'Powered vk Bot' })
         .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(

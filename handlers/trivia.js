@@ -30,8 +30,7 @@ module.exports = {
     }
 
     // Aquí deberías verificar la respuesta correcta
-    // Por simplicidad, simulamos que la opción 1 (B) es siempre correcta
-    const esCorrecta = opcionElegida === 1; // Esto debería venir de la pregunta guardada
+    const esCorrecta = opcionElegida === 1; 
 
     if (esCorrecta) {
       const monedas = 100;

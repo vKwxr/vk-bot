@@ -18,8 +18,10 @@ module.exports = {
         .setRequired(false)),
 
   async execute(interaction, client) {
-    // Verificar permisos
-    if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
+    // ✅ Obtener miembro completo para asegurar permisos
+    const member = await interaction.guild.members.fetch(interaction.user.id);
+
+    if (!member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
       return interaction.reply({
         content: '❌ Necesitas permisos de **Gestionar Mensajes** para usar este comando.',
         ephemeral: true
@@ -30,9 +32,9 @@ module.exports = {
     const canal = interaction.options.getChannel('canal') || interaction.channel;
     const usarEmbed = interaction.options.getBoolean('embed') || false;
 
-    // Filtrar contenido inapropiado básico
+    // 🔒 Filtrar contenido inapropiado
     const palabrasProhibidas = ['@everyone', '@here', 'discord.gg/', 'https://discord.com/'];
-    const contieneProhibida = palabrasProhibidas.some(palabra => 
+    const contieneProhibida = palabrasProhibidas.some(palabra =>
       mensaje.toLowerCase().includes(palabra.toLowerCase())
     );
 
@@ -77,6 +79,7 @@ module.exports = {
     }
   },
 
+  // 🎯 Comando clásico (prefijo)
   name: 'say',
   async run(message, args, client) {
     if (!message.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
@@ -91,7 +94,7 @@ module.exports = {
 
     try {
       await message.channel.send(texto);
-      await message.delete().catch(() => {}); // Intentar borrar pero no fallar si no se puede
+      await message.delete().catch(() => {}); // Ignorar si no puede borrar
     } catch (error) {
       console.error('Error en comando say:', error);
       message.reply('❌ **Error al enviar el mensaje**');
