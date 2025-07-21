@@ -39,8 +39,8 @@ module.exports = {
     // Verificar si ya tiene un ticket abierto en este servidor
     const ticketExists = await new Promise((resolve, reject) => {
       ticketsDb.get(
-        "SELECT * FROM tickets WHERE user_id = ? AND guild_id = ? AND status = 'open'",
-        [userId, guildId],
+        "SELECT * FROM tickets WHERE user_id = ? AND status = 'open'",
+        [userId],
         (err, row) => {
           if (err) reject(err);
           else resolve(row);
@@ -163,8 +163,8 @@ module.exports = {
             { name: '👤 Estado', value: 'Abierto', inline: true }
           )
           .setColor("#5865F2")
-          .setFooter({ text: `ID: ${ticketChannel.id} • vK Support` })
-          .setImage('https://media0.giphy.com/media/v1.Y2lkPTc5MGI3NjExYnZjYnNmbTBpMXBmMDIwYjIwbWdzcnVtY2p2MjEwODV2YWl5MXk1MyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7NeoMpmd7Ie9l1cO5c/giphy.gif')
+          .setFooter({ text: `ID Channel: ${ticketChannel.id} • vK Support` })
+          .setImage()
           .setTimestamp();
 
         const actionRow = new ActionRowBuilder().addComponents(

@@ -1,14 +1,21 @@
 const { REST, Routes } = require("discord.js");
 const fs = require("fs");
+const path = require("path");
 require("dotenv").config();
 
 const commands = [];
-const commandFiles = fs.readdirSync("./commands/admin").filter(file => file.endsWith(".js"));
+const foldersPath = path.join(__dirname, "commands");
+const commandFolders = fs.readdirSync(foldersPath);
 
-for (const file of commandFiles) {
-  const command = require(`./commands/admin/${file}`);
-  if (command.data) {
-    commands.push(command.data.toJSON());
+for (const folder of commandFolders) {
+  const commandsPath = path.join(foldersPath, folder);
+  const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith(".js"));
+
+  for (const file of commandFiles) {
+    const command = require(path.join(commandsPath, file));
+    if (command.data) {
+      commands.push(command.data.toJSON());
+    }
   }
 }
 
@@ -19,7 +26,7 @@ const rest = new REST({ version: "10" }).setToken(process.env.TOKEN);
     console.log("🚀 Registrando comandos slash...");
 
     await rest.put(
-      Routes.applicationGuildCommands(process.env.CLIENT_ID, process.env.GUILD_ID),
+      Routes.applicationCommands(process.env.CLIENT_ID),
       { body: commands }
     );
 

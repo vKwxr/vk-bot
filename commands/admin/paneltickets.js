@@ -11,13 +11,17 @@ module.exports = {
     ),
 
   async execute(interaction, client) {
-    // Solo permisos de Administrador en ese servidor
-    if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
-      return interaction.reply({
-        content: '❌ Solo los administradores pueden usar este comando.',
-        ephemeral: true
-      });
-    }
+   if (
+  !interaction.inGuild() ||
+  !interaction.member ||
+  !interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)
+) {
+  return interaction.reply({
+    content: '❌ Este comando solo puede usarse en un servidor y requiere permisos de administrador.',
+    ephemeral: true
+  });
+}
+
 
     const canal = interaction.options.getChannel('canal');
 
@@ -30,52 +34,14 @@ module.exports = {
     }
 
     const embed = new EmbedBuilder()
-      .setTitle('🎫 Sistema de Tickets - vK Bot')
-      .setDescription('¡Bienvenido/a al sistema de tickets de nuestra guild\n\nAqui te puedes poner en contcto con el staff para resolver cualquier duda o problema que tengas\n\nselecciona en el menu de abajo cual es tu problema o consulta ')
-      .addFields(
-        { 
-          name: '🛠️ Soporte Técnico', 
-          value: '• Problemas con comandos del bot\n• Errores técnicos del servidor\n• Configuraciones que no funcionan', 
-          inline: false 
-        },
-        { 
-          name: '🚨 Reportar Usuario', 
-          value: '• Comportamiento inadecuado\n• Spam o toxicidad\n• Incumplimiento de reglas', 
-          inline: false 
-        },
-        { 
-          name: '💡 Sugerencias', 
-          value: '• Ideas para mejorar el servidor\n• Nuevas funciones del bot\n• Propuestas de eventos/sorteos', 
-          inline: false 
-        },
-        { 
-          name: '⚖️ Apelaciones', 
-          value: '• Apelar warns o bans\n• Disputar sanciones\n• Solicitar revisión de casos', 
-          inline: false 
-        },
-        { 
-          name: '🤝 Partnership', 
-          value: '• Colaboraciones con otros servidores\n• Propuestas de alianzas\n• Intercambios promocionales', 
-          inline: false 
-        },
-        { 
-          name: '🛒 Recompensas de Tienda', 
-          value: '• Reclamar roles comprados\n• Problemas con compras\n• Solicitar recompensas', 
-          inline: false 
-        },
-        { 
-          name: '❓ Otras Consultas', 
-          value: '• Preguntas generales\n• Dudas sobre el servidor\n• Consultas no categorizadas', 
-          inline: false 
-        },
-        {
-          name: '⏰ Horarios de Atención',
-          value: 'Los tickets son atendidos **24/7** por nuestro equipo de staff',
-          inline: false
-        }
-      )
+      .setTitle('🎫 Sistema de Tickets')
+.setDescription(`¡Bienvenido/a al centro de soporte de nuestra comunidad!
+
+Aquí podrás ponerte en contacto con el equipo de moderación y soporte para resolver cualquier duda, problema o solicitud que tengas relacionada con el servidor.
+
+📬 Nuestro equipo revisará tu ticket lo antes posible. Por favor, selecciona a continuación el tipo de asistencia que necesitas:`)
+
       .setColor('#5865F2')
-      .setImage('https://images-ext-1.discordapp.net/external/db8Y95263mlJkVPkfhxScjHnr03h3oGOujbEjdc8-2Y/https/media4.giphy.com/media/v1.Y2lkPTZjMDliOTUyaXE1bzB0NGcxazB3aGFrcTI0aGt6ZTlwMHc1bHgyamFuM3BoYTdsdyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/7NeoMpmd7Ie9l1cO5c/giphy.gif')
       .setThumbnail('https://cdn.discordapp.com/emojis/ticket-emoji.png')
       .setFooter({ text: 'vK Bot' })
       .setTimestamp();
@@ -92,13 +58,13 @@ module.exports = {
         },
         {
           label: 'Reportar Usuario',
-          description: 'Reportar comportamiento inadecuado',
+          description: 'Reportar comportamiento inadecuado de un usuario',
           value: 'reporte',
           emoji: '🚨'
         },
         {
           label: 'Sugerencia',
-          description: 'Proponer ideas al staff',
+          description: 'Proponer ideas al staff para mejorar el servidor o bot',
           value: 'sugerencia',
           emoji: '💡'
         },
