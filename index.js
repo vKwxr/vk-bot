@@ -280,7 +280,7 @@ async function deployCommands() {
 
     // Obtener comandos existentes primero
     const existingCommands = await rest.get(Routes.applicationCommands(process.env.CLIENT_ID));
-    
+
     // Registrar comandos uno por uno para evitar el error de Entry Point
     for (const command of commands) {
       try {
@@ -368,8 +368,8 @@ client.once('ready', async () => {
   console.log(`🤖 ${client.user.tag} está conectado!`);
   await deployCommands();
 
-  // Actividad del bot
-  client.user.setActivity('🎮 Moderando VK Community', { type: 'WATCHING' });
+  // Actualizar la presencia del bot
+  client.user.setPresence("Playing Solo", { type: "PLAYING" });
 });
 
 // Iniciar bot

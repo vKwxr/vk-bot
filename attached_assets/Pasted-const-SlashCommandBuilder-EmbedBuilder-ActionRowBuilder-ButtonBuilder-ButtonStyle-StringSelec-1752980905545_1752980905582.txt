@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, PermissionsBitField } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, PermissionsBitField } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -11,7 +11,6 @@ module.exports = {
     ),
 
   async execute(interaction, client) {
-    // Solo permisos de Administrador en ese servidor
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
       return interaction.reply({
         content: '❌ Solo los administradores pueden usar este comando.',
@@ -20,14 +19,6 @@ module.exports = {
     }
 
     const canal = interaction.options.getChannel('canal');
-
-    // Verifica que el canal sea un canal de texto
-    if (canal.type !== 0) { // 0 es texto en discord.js v14
-      return interaction.reply({
-        content: '❌ El canal debe ser un canal de texto.',
-        ephemeral: true
-      });
-    }
 
     const embed = new EmbedBuilder()
       .setTitle('🎫 Sistema de Tickets - VK Community')

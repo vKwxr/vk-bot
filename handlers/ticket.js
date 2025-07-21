@@ -14,6 +14,44 @@ const TICKET_TYPES = [
 
 module.exports = {
   async execute(interaction, client) {
+    const sqlite3 = require("sqlite3").verbose();
+    const path = require("path");
+    const ticketsDb = new sqlite3.Database(path.join(__dirname, "../tickets.sqlite"));
+    const guildId = interaction.guild.id;
+    const userId = interaction.user.id;
+
+    // Obtener configuración del servidor desde la base de datos
+    const getConfig = () => new Promise((resolve, reject) => {
+      ticketsDb.get("SELECT * FROM ticket_configs WHERE guild_id = ?", [guildId], (err, row) => {
+        if (err) reject(err);
+        else resolve(row);
+      });
+    });
+
+    const config = await getConfig();
+    if (!config) {
+      return interaction.reply({ content: "⚠️ El servidor no tiene configuración de tickets. Usa el panel de administración.", ephemeral: true });
+    }
+
+    const staffRoleId = config.staff_role_id;
+    const categoryId = config.category_id;
+
+    // Verificar si ya tiene un ticket abierto en este servidor
+    const ticketExists = await new Promise((resolve, reject) => {
+      ticketsDb.get(
+        "SELECT * FROM tickets WHERE user_id = ? AND guild_id = ? AND status = 'open'",
+        [userId, guildId],
+        (err, row) => {
+          if (err) reject(err);
+          else resolve(row);
+        }
+      );
+    });
+
+    if (ticketExists) {
+      return interaction.reply({ content: "❌ Ya tienes un ticket abierto en este servidor.", ephemeral: true });
+    }
+
     const { ticketsDb, STAFF_ROLE_ID, ADMIN_ROLE_ID, TICKETS_CATEGORY_ID, TICKETS_LOGS_CHANNEL_ID } = client.config;
 
     if (interaction.customId === 'ticket_select') {
@@ -79,7 +117,7 @@ module.exports = {
         const ticketChannel = await interaction.guild.channels.create({
           name: ticketName,
           type: ChannelType.GuildText,
-          parent: TICKETS_CATEGORY_ID || null,
+          parent: categoryId,
           permissionOverwrites: [
             {
               id: interaction.guild.id,
@@ -95,7 +133,7 @@ module.exports = {
               ],
             },
             {
-              id: STAFF_ROLE_ID,
+              id: staffRoleId,
               allow: [
                 PermissionsBitField.Flags.ViewChannel,
                 PermissionsBitField.Flags.SendMessages,
