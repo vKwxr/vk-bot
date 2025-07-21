@@ -52,7 +52,7 @@ module.exports = {
       return interaction.reply({ content: "❌ Ya tienes un ticket abierto en este servidor.", ephemeral: true });
     }
 
-    const { ticketsDb, STAFF_ROLE_ID, ADMIN_ROLE_ID, TICKETS_CATEGORY_ID, TICKETS_LOGS_CHANNEL_ID } = client.config;
+    const { STAFF_ROLE_ID, ADMIN_ROLE_ID, TICKETS_CATEGORY_ID, TICKETS_LOGS_CHANNEL_ID } = client.config;
 
     if (interaction.customId === 'ticket_select') {
       const tipo = interaction.values[0];

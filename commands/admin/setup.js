@@ -1,4 +1,3 @@
-
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const sqlite3 = require("sqlite3").verbose();
 const path = require("path");
@@ -35,9 +34,9 @@ module.exports = {
       const db = new sqlite3.Database(path.join(__dirname, "../../tickets.sqlite"));
 
       db.run(
-        \`INSERT INTO ticket_configs (guild_id, staff_role_id, category_id)
+        `INSERT INTO ticket_configs (guild_id, staff_role_id, category_id)
          VALUES (?, ?, ?)
-         ON CONFLICT(guild_id) DO UPDATE SET staff_role_id = excluded.staff_role_id, category_id = excluded.category_id;\`,
+         ON CONFLICT(guild_id) DO UPDATE SET staff_role_id = excluded.staff_role_id, category_id = excluded.category_id;`,
         [guildId, staffRole.id, category.id],
         function (err) {
           if (err) {
