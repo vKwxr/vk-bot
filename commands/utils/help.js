@@ -42,7 +42,7 @@ module.exports = {
 
   async showMainHelp(context) {
     const embed = new EmbedBuilder()
-      .setTitle('📚 Panel de Ayuda - VK Community')
+      .setTitle('📚 Panel de Ayuda - vK')
       .setDescription('¡Bienvenido al sistema de ayuda! Selecciona una categoría para ver los comandos disponibles.')
       .addFields(
         { name: '🛡️ Moderación', value: 'Comandos para moderar el servidor', inline: true },
@@ -53,7 +53,7 @@ module.exports = {
         { name: '🎯 Juegos', value: 'Juegos interactivos', inline: true }
       )
       .setColor('#0099ff')
-      .setFooter({ text: 'VK Community • Usa el menú para navegar' })
+      .setFooter({ text: 'vK Bot • Usa el menú para navegar' })
       .setTimestamp();
 
     const selectMenu = new StringSelectMenuBuilder()
@@ -78,52 +78,72 @@ module.exports = {
 
   async showCategory(context, categoria, page = 0) {
     const comandos = {
-      moderation: [
-        { name: 'ban', description: 'Banear un usuario', usage: '`vk ban` @usuario [razón]' },
-        { name: 'kick', description: 'Expulsar un usuario', usage: '`vk kick` @usuario [razón]' },
-        { name: 'timeout', description: 'Aislar temporalmente', usage: '`vk timeout` @usuario <tiempo>' },
-        { name: 'warn', description: 'Advertir a un usuario', usage: '`vk warn` @usuario [razón]' },
-        { name: 'clear', description: 'Borrar mensajes', usage: '`vk clear` <cantidad>' },
-        { name: 'addrole', description: 'Agregar rol a usuario', usage: '`vk addrole` @usuario @rol' }
-      ],
-      fun: [
-        { name: 'hola', description: 'Saludo personalizado con IA', usage: '`vk hola`' },
-        { name: '8ball', description: 'Bola mágica 8', usage: '`vk 8ball` <pregunta>' },
-        { name: 'chiste', description: 'Contar un chiste', usage: '`vk chiste`' },
-        { name: 'dado', description: 'Lanzar un dado', usage: '`vk dado` [lados]' },
-        { name: 'moneda', description: 'Lanzar una moneda', usage: '`vk moneda`' },
-        { name: 'insulto', description: 'Insulto gracioso', usage: '`vk insulto` [@usuario]' },
-        { name: 'hug', description: 'Abrazar a alguien', usage: '`vk hug` @usuario' },
-        { name: 'kiss', description: 'Besar a alguien', usage: '`vk kiss` @usuario' },
-        { name: 'pat', description: 'Hacerle pat a alguien', usage: '`vk pat` @usuario' },
-        { name: 'poke', description: 'Hacerle poke a alguien', usage: '`vk poke` @usuario' }
-      ],
+  moderation: [
+  { name: 'ban', description: 'Banear un usuario', usage: '`/ban` y `vk ban` @usuario [razón]' },
+  { name: 'kick', description: 'Expulsar un usuario', usage: '`/kick` y `vk kick` @usuario [razón]' },
+  { name: 'timeout', description: 'Aislar temporalmente a un usuario', usage: '`/timeout` y `vk timeout` @usuario <tiempo>' },
+  { name: 'warn', description: 'Advertir a un usuario', usage: '`/warn` y `vk warn` @usuario [razón]' },
+  { name: 'warnings', description: 'Ver advertencias de un usuario', usage: '`/warnings`' },
+  { name: 'clear', description: 'Borrar mensajes del canal', usage: '`/clear` y `vk clear` <cantidad>' },
+  { name: 'addrole', description: 'Agregar un rol a un usuario', usage: '`/addrole`' },
+  { name: 'removerole', description: 'Quitar un rol de un usuario', usage: '`/removerole`' },
+  { name: 'createrole', description: 'Crear un nuevo rol', usage: '`/createrole`' },
+  { name: 'paneltickets', description: 'Mostrar el panel de creación de tickets', usage: '`/paneltickets`' },
+  { name: 'setup', description: 'Configurar el sistema de tickets o funciones', usage: '`/setup`' },
+  { name: 'mute', description: 'Silenciar a un usuario (timeout)', usage: '`/timeout` y `vk mute` @usuario <tiempo>' }
+],
+     fun: [
+  { name: 'hola', description: 'Saludo personalizado con IA', usage: '`/hola` y `vk hola`' },
+  { name: '8ball', description: 'Bola mágica que responde preguntas', usage: '`/8ball` y `vk 8ball` <pregunta>' },
+  { name: 'chiste', description: 'Contar un chiste aleatorio', usage: '`/chiste` y `vk chiste`' },
+  { name: 'dado', description: 'Lanzar un dado con cantidad de caras opcional', usage: '`/dado` y `vk dado` [lados]' },
+  { name: 'moneda', description: 'Lanzar una moneda (cara o sello)', usage: '`/moneda` y `vk moneda`' },
+  { name: 'insulto', description: 'Decir un insulto gracioso a alguien', usage: '`/insulto` y `vk insulto` [@usuario]' },
+  { name: 'hug', description: 'Abrazar a otro usuario con un GIF', usage: '`/hug` y `vk hug` @usuario' },
+  { name: 'kiss', description: 'Besar a otro usuario con un GIF', usage: '`/kiss` y `vk kiss` @usuario' },
+  { name: 'pat', description: 'Dar palmadas (pat) a otro usuario', usage: '`/pat` y `vk pat` @usuario' },
+  { name: 'poke', description: 'Picar (poke) a otro usuario', usage: '`/poke` y `vk poke` @usuario' }
+],
       economy: [
-        { name: 'balance', description: 'Ver tu dinero', usage: '`vk balance` [@usuario]' },
-        { name: 'daily', description: 'Recompensa diaria', usage: '`vk daily`' },
-        { name: 'weekly', description: 'Recompensa semanal', usage: '`vk weekly`' },
-        { name: 'work', description: 'Trabajar por dinero', usage: '`vk work`' },
-        { name: 'jobs', description: 'Sistema de trabajos', usage: '`vk jobs` <acción>' },
-        { name: 'shop', description: 'Tienda del servidor', usage: '`vk shop`' },
-        { name: 'buy', description: 'Comprar artículos', usage: '`vk buy` <artículo>' }
-      ],
+  { name: 'balance', description: 'Ver tu dinero o el de otro usuario', usage: '`/balance` y `vk balance` [@usuario]' },
+  { name: 'daily', description: 'Cobrar tu recompensa diaria', usage: '`/daily` y `vk daily`' },
+  { name: 'weekly', description: 'Cobrar tu recompensa semanal', usage: '`/weekly` y `vk weekly`' },
+  { name: 'work', description: 'Trabajar para ganar dinero', usage: '`/work` y `vk work`' },
+  { name: 'jobs', description: 'Ver y usar trabajos disponibles', usage: '`/jobs` y `vk jobs` <acción>' },
+  { name: 'shop', description: 'Mostrar la tienda del servidor', usage: '`/shop` y `vk shop`' },
+  { name: 'buy', description: 'Comprar un artículo de la tienda', usage: '`/buy` y `vk buy` <artículo>' }
+],
       utils: [
-        { name: 'avatar', description: 'Ver avatar de usuario', usage: '`vk avatar` [@usuario]' },
-        { name: 'userinfo', description: 'Info de usuario', usage: '`vk userinfo` [@usuario]' },
-        { name: 'serverinfo', description: 'Info del servidor', usage: '`vk serverinfo`' },
-        { name: 'say', description: 'Hacer hablar al bot', usage: '`vk say` <mensaje>' },
-        { name: 'reminder', description: 'Crear recordatorio', usage: '`vk reminder` <tiempo> <mensaje>' },
-        { name: 'translate', description: 'Traducir texto', usage: '`vk translate` <idioma> <texto>' },
-        { name: 'birthday', description: 'Configurar cumpleaños', usage: '`vk birthday` <fecha>' },
-        { name: 'level', description: 'Ver tu nivel', usage: '`vk level` [@usuario]' },
-        { name: 'rank', description: 'Ver ranking de niveles', usage: '`vk rank`' }
-      ],
-      info: [
-        { name: 'ping', description: 'Latencia del bot', usage: '`vk ping`' },
-        { name: 'uptime', description: 'Tiempo activo', usage: '`vk uptime`' },
-        { name: 'support', description: 'Servidor de soporte', usage: '`vk support`' },
-        { name: 'ask', description: 'Preguntar a VK AI', usage: '`vk ask` <pregunta>' }
-      ],
+  { name: 'avatar', description: 'Ver avatar de usuario', usage: '`vk avatar` [@usuario]' },
+  { name: 'userinfo', description: 'Info de usuario', usage: '`vk userinfo` [@usuario]' },
+  { name: 'serverinfo', description: 'Info del servidor', usage: '`vk serverinfo`' },
+  { name: 'say', description: 'Hacer hablar al bot', usage: '`vk say` <mensaje>' },
+  { name: 'reminder', description: 'Crear recordatorio', usage: '`vk reminder` <tiempo> <mensaje>' },
+  { name: 'translate', description: 'Traducir texto', usage: '`vk translate` <idioma> <texto>' },
+  { name: 'birthday', description: 'Configurar cumpleaños', usage: '`vk birthday` <fecha>' },
+  { name: 'level', description: 'Ver tu nivel', usage: '`vk level` [@usuario]' },
+  { name: 'rank', description: 'Ver ranking de niveles', usage: '`vk rank`' },
+
+  // Sorteos
+  { name: 'giveaway', description: 'Iniciar un nuevo sorteo', usage: '`/giveaway`' },
+  { name: 'reroll', description: 'Elegir nuevos ganadores para un sorteo', usage: '`/reroll` <messageId>' },
+  { name: 'edit', description: 'Editar un sorteo activo', usage: '`/edit` <messageId>' },
+  { name: 'rollback', description: 'Revertir un sorteo cancelado', usage: '`/rollback` <messageId>' }
+],
+ info: [
+  { name: 'ping', description: 'Ver la latencia del bot', usage: '`/ping` y `vk ping`' },
+  { name: 'uptime', description: 'Tiempo que lleva activo el bot', usage: '`/uptime` y `vk uptime`' },
+  { name: 'support', description: 'Enlace al servidor de soporte', usage: '`/support` y `vk support`' },
+  { name: 'ask', description: 'Haz una pregunta a la IA de VK (respuesta general)', usage: '`/ask` y `vk ask` <pregunta>' },
+  { name: 'askbot', description: 'Preguntar cómo usar las funciones del bot (IA guía)', usage: '`vk askbot` <comando o pregunta>' },
+  
+  { name: 'setup-tickets', description: 'Configura el sistema de tickets en el servidor', usage: '`/setup tickets`' },
+  { name: 'paneltickets', description: 'Enviar el panel interactivo de tickets', usage: '`/paneltickets`' },
+  { name: 'config', description: 'Ver o modificar la configuración del servidor', usage: '`/config`' },
+  { name: 'autoroles', description: 'Configurar roles automáticos y por niveles', usage: '`/autoroles`' },
+  { name: 'tutorial', description: 'Ver tutorial de comandos del bot', usage: '`/tutorial`' }
+],
+
       games: [
         { name: 'guess', description: 'Adivina el número', usage: '`vk guess`' },
         { name: 'trivia', description: 'Preguntas de trivia', usage: '`vk trivia`' }
@@ -152,7 +172,7 @@ module.exports = {
       .setTitle(`${categoryNames[categoria] || '❓ Categoría'} - Comandos`)
       .setDescription(`Página ${currentPage + 1} de ${totalPages}`)
       .setColor('#0099ff')
-      .setFooter({ text: `VK Community • ${pageCommands.length} comandos mostrados` })
+      .setFooter({ text: `vK • ${pageCommands.length} comandos mostrados` })
       .setTimestamp();
 
     pageCommands.forEach(cmd => {

@@ -9,6 +9,10 @@ module.exports = {
       option.setName('canal')
         .setDescription('Canal donde se publicará')
         .setRequired(true))
+    .addUserOption(option =>
+      option.setName('Patrocinador (opcional)')
+        .setDescription('Usuario que patrocina el sorteo')
+        .setRequired(true))
     .addStringOption(option =>
       option.setName('titulo')
         .setDescription('Título del sorteo')
@@ -84,7 +88,7 @@ ${invitesMinimas > 0 ? `**📨 Invitaciones mínimas:** ${invitesMinimas}` : ''}
 
 ¡Haz clic en el botón para participar!`)
       .setColor('#ffb300')
-      .setFooter({ text: 'Sorteo VK Community' })
+      .setFooter({ text: 'Sorteo vK' })
       .setTimestamp();
 
     if (imagen && imagen.startsWith('http')) {
@@ -95,7 +99,7 @@ ${invitesMinimas > 0 ? `**📨 Invitaciones mínimas:** ${invitesMinimas}` : ''}
       .addComponents(
         new ButtonBuilder()
           .setCustomId('giveaway_join')
-          .setLabel('🎉 Participar')
+          .setLabel('Participar')
           .setStyle(ButtonStyle.Primary)
           .setEmoji('🎉')
       );
@@ -108,8 +112,8 @@ ${invitesMinimas > 0 ? `**📨 Invitaciones mínimas:** ${invitesMinimas}` : ''}
 
     // Guardar en DB
     client.config.sorteosDb.run(
-      `INSERT INTO sorteos (channel_id, message_id, titulo, premio, rol_requerido, finaliza, imagen, ganadores_cantidad, min_invites, participantes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [canal.id, message.id, titulo, premio, rolRequerido?.id, finaliza, imagen, ganadores, invitesMinimas, '[]']
+      `INSERT INTO sorteos (channel_id, userId, message_id, titulo, premio, rol_requerido, finaliza, imagen, ganadores_cantidad, min_invites, participantes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [canal.id, user.Id, message.id, titulo, premio, rolRequerido?.id, finaliza, imagen, ganadores, invitesMinimas, '[]']
     );
 
     await interaction.reply({
@@ -188,7 +192,7 @@ async function finalizarSorteo(client, messageId) {
               : '❌ No hubo participantes válidos.'
           )
           .setColor('#43e97b')
-          .setFooter({ text: 'Sorteo VK Community' })
+          .setFooter({ text: 'Sorteo vK' })
           .setTimestamp();
 
         if (sorteo.imagen && sorteo.imagen.startsWith('http')) {

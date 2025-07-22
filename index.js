@@ -297,10 +297,13 @@ async function deployCommands() {
     console.error('❌ Error registrando comandos:', error.message);
   }
 }
+// Incluir generador de conocimiento de la IA
+require('./generateKnowledge.js'); 
 
 // Cargar todo
 loadCommands();
 loadEvents();
+
 
 // Inicializar items por defecto de la tienda
 setTimeout(() => {
