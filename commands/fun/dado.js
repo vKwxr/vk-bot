@@ -1,5 +1,4 @@
-
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -37,30 +36,17 @@ module.exports = {
       total += resultado;
     }
 
-    const dadosEmoji = {
-      1: '⚀', 2: '⚁', 3: '⚂',
-      4: '⚃', 5: '⚄', 6: '⚅'
-    };
+    const dadosEmoji = { 1: '⚀', 2: '⚁', 3: '⚂', 4: '⚃', 5: '⚄', 6: '⚅' };
 
-    let descripcion;
+    let mensaje;
     if (cantidad === 1) {
       const emoji = caras === 6 && resultados[0] <= 6 ? dadosEmoji[resultados[0]] : '🎲';
-      descripcion = `${emoji} **Resultado: ${resultados[0]}**`;
+      mensaje = `${emoji} Resultado: **${resultados[0]}**`;
     } else {
-      descripcion = `🎲 **Dados:** ${resultados.join(', ')}\n🎯 **Total:** ${total}`;
+      mensaje = `🎲 Resultados: ${resultados.join(', ')}\n🎯 Total: **${total}**\n📊 ${cantidad} dado${cantidad > 1 ? 's' : ''} de ${caras} cara${caras > 1 ? 's' : ''}`;
     }
 
-    const embed = new EmbedBuilder()
-      .setTitle(`🎲 Lanzamiento de Dado${cantidad > 1 ? 's' : ''}`)
-      .setDescription(descripcion)
-      .addFields(
-        { name: '📊 Detalles', value: `${cantidad} dado${cantidad > 1 ? 's' : ''} de ${caras} cara${caras > 1 ? 's' : ''}`, inline: true }
-      )
-      .setColor('#ff6b6b')
-      .setFooter({ text: `Lanzado por ${interaction.user.tag}`, iconURL: interaction.user.displayAvatarURL() })
-      .setTimestamp();
-
-    await interaction.reply({ embeds: [embed] });
+    await interaction.reply(mensaje);
   },
 
   name: 'dado',
@@ -70,16 +56,12 @@ module.exports = {
 
     if (args[0]) {
       const parsedCantidad = parseInt(args[0]);
-      if (parsedCantidad && parsedCantidad >= 1 && parsedCantidad <= 10) {
-        cantidad = parsedCantidad;
-      }
+      if (parsedCantidad >= 1 && parsedCantidad <= 10) cantidad = parsedCantidad;
     }
 
     if (args[1]) {
       const parsedCaras = parseInt(args[1]);
-      if (parsedCaras && [4, 6, 8, 10, 12, 20].includes(parsedCaras)) {
-        caras = parsedCaras;
-      }
+      if ([4, 6, 8, 10, 12, 20].includes(parsedCaras)) caras = parsedCaras;
     }
 
     const resultados = [];
@@ -91,29 +73,16 @@ module.exports = {
       total += resultado;
     }
 
-    const dadosEmoji = {
-      1: '⚀', 2: '⚁', 3: '⚂',
-      4: '⚃', 5: '⚄', 6: '⚅'
-    };
+    const dadosEmoji = { 1: '⚀', 2: '⚁', 3: '⚂', 4: '⚃', 5: '⚄', 6: '⚅' };
 
-    let descripcion;
+    let mensaje;
     if (cantidad === 1) {
       const emoji = caras === 6 && resultados[0] <= 6 ? dadosEmoji[resultados[0]] : '🎲';
-      descripcion = `${emoji} **Resultado: ${resultados[0]}**`;
+      mensaje = `${emoji} Resultado: **${resultados[0]}**`;
     } else {
-      descripcion = `🎲 **Dados:** ${resultados.join(', ')}\n🎯 **Total:** ${total}`;
+      mensaje = `🎲 Resultados: ${resultados.join(', ')}\n🎯 Total: **${total}**\n📊 ${cantidad} dado${cantidad > 1 ? 's' : ''} de ${caras} cara${caras > 1 ? 's' : ''}`;
     }
 
-    const embed = new EmbedBuilder()
-      .setTitle(`🎲 Lanzamiento de Dado${cantidad > 1 ? 's' : ''}`)
-      .setDescription(descripcion)
-      .addFields(
-        { name: '📊 Detalles', value: `${cantidad} dado${cantidad > 1 ? 's' : ''} de ${caras} cara${caras > 1 ? 's' : ''}`, inline: true }
-      )
-      .setColor('#ff6b6b')
-      .setFooter({ text: `Lanzado por ${message.author.tag}`, iconURL: message.author.displayAvatarURL() })
-      .setTimestamp();
-
-    await message.reply({ embeds: [embed] });
+    await message.reply(mensaje);
   }
 };

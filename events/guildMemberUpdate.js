@@ -3,20 +3,18 @@ const { EmbedBuilder } = require('discord.js');
 module.exports = {
   name: 'guildMemberUpdate',
   async execute(oldMember, newMember, client) {
-    // Sistema de niveles por actividad en lugar de boost
     if (newMember.user.bot) return;
 
     try {
       const { levelsDb } = client.config;
 
-      // Solo dar XP por actividad real (como estar en canales de voz)
       if (newMember.voice.channel && !oldMember.voice.channel) {
         levelsDb.get('SELECT * FROM levels WHERE user_id = ?', [newMember.id], (err, row) => {
           if (err) return;
 
           const currentXP = row ? row.xp : 0;
           const currentLevel = row ? row.level : 1;
-          const xpGain = Math.floor(Math.random() * 15) + 5; // 5-20 XP por unirse a voz
+          const xpGain = Math.floor(Math.random() * 15) + 5; 
           const newXP = currentXP + xpGain;
           const newLevel = Math.floor(newXP / 1000) + 1;
 
@@ -26,10 +24,9 @@ module.exports = {
             levelsDb.run('INSERT INTO levels (user_id, xp, level) VALUES (?, ?, ?)', [newMember.id, newXP, newLevel]);
           }
 
-          // Notificar level up
           if (newLevel > currentLevel) {
             const levelUpEmbed = new EmbedBuilder()
-              .setTitle('🆙 ¡Subiste de Nivel!')
+              .setTitle('¡Subiste de Nivel!')
               .setDescription(`¡Felicidades ${newMember}! Has alcanzado el **nivel ${newLevel}**`)
               .setColor('#00ff00')
               .setTimestamp();

@@ -1,16 +1,52 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 
 const saludos = [
-  "¡Hola **{user}**! Bienvenido a VK Community 👑",
-  "¡Qué tal **{user}**! ¿Cómo estás hoy? 😊",
-  "¡Hey **{user}**! ¡Qué bueno verte por aquí! 🎉",
-  "¡Saludos **{user}**! ¡Espero que tengas un gran día! ☀️",
-  "¡Hola **{user}**! ¡Listo para divertirte en VK? 🚀",
-  "¡Buenos días/tardes **{user}**! ¡Que disfrutes tu estancia! 🌟",
-  "¡Hola **{user}**! ¡La comunidad se alegra de verte! 💜",
-  "¡Hey **{user}**! ¡Otro día increíble en VK Community! ⭐",
-  "¡Hola **{user}**! ¡Siempre es un placer saludarte! 🎭",
-  "¡Qué pasa **{user}**! ¡Listo para la diversión! 🎪"
+  "¡Hola {user}! 👋 Bienvenido a VK Community.",
+  "¡Qué tal {user}! 😄 ¿Todo bien?",
+  "¡Hey {user}! 🎉 ¡Buena vibra por aquí!",
+  "¡Saludos {user}! ✨ ¡Disfruta tu día!",
+  "¡Hola {user}! 🚀 ¿Listo para la aventura?",
+  "¡Buenos días/tardes/noches {user}! 🌟 ¡A romperla!",
+  "¡Ey {user}! 👑 Siempre un gusto verte por aquí.",
+  "¡Hola {user}! 🔥 ¡Vamos a darle!",
+  "¡Qué pasa {user}! 🎮 ¿Jugamos o qué?",
+  "¡Saludos, crack {user}! 💪 ¡A tope siempre!",
+  "¡Hey {user}! 🌈 ¡Saca esa facha!",
+  "¡Bienvenido a este momento {user}! ⭐ ¡Pura buena onda!",
+  "¡Hola, {user}! ✨ ¡A romper corazones!",
+  "¡{user}! 🚀 ¡El server es tuyo!",
+  "¡Hey {user}! 😎 ¡Te estábamos esperando!",
+  "¡Bien ahí {user}! 💥 ¡Actitud VK!",
+  "¡{user}! 🫡 ¡El más facha de VK!",
+  "¡Eres leyenda, {user}! 🏆",
+  "¡Saludos {user}! 💜 ¡VK Community siempre te recibe bien!",
+  "¡{user}! 👋 ¡Que hoy tengas un día brutal!",
+  "¡Arrancamos {user}! 🔥 ¿Preparado?",
+  "¡Hola {user}! 🕶️ ¡Con toda la actitud!",
+  "¡Saludos épicos para {user}! ⚡",
+  "¡Ey {user}! 🤖 El bot te saluda oficialmente.",
+  "¡Buenas {user}! 🐺 ¡El lobo está suelto!",
+  "¡{user}, tu presencia sube el nivel! 🎯",
+  "¡Qué onda {user}! 🎤 ¡Vas con todo!",
+  "¡A darle, {user}! 💯 ¡Hoy es tu día!",
+  "¡Saludos especiales a {user}! 🫶",
+  "¡{user}, nunca cambies! 😄",
+  "¡El server se alegra con tu llegada, {user}! 🎊",
+  "¡Hey {user}! 🚨 ¡Facha detectada!",
+  "¡Te extrañábamos, {user}! 💬",
+  "¡{user}, el elegido ha llegado! 🔥",
+  "¡Hola, campeón {user}! 🏆",
+  "¡{user}! 🚀 ¡Haz que cuente!",
+  "¡{user}, eres parte del combo VK! 🤝",
+  "¡Bienvenido, {user}! 🔥 ¡Que se arme la buena vibra!",
+  "¡El legendario {user} ha aparecido! 🐉",
+  "¡Saludos del bot para {user}! 🤖",
+  "¡{user}, empieza la buena energía! ✨",
+  "¡Holi {user}! 🥰 ¿Todo piola?",
+  "¡Buenas {user}! 🍀 Que hoy sea épico.",
+  "¡{user}! 🎲 ¿Listo para la acción?",
+  "¡Hey tú, {user}! 🎯 Bienvenido crack.",
+  "¡VK no es lo mismo sin ti, {user}! 👏"
 ];
 
 module.exports = {
@@ -19,61 +55,29 @@ module.exports = {
     .setDescription('👋 Recibe un saludo personalizado del bot'),
 
   async execute(interaction, client) {
-    const usuario = interaction.options.getUser('usuario') || interaction.user;
-
-    const respuestasAleatorias = [
-      `¡Hola ${usuario}! 🌟 Espero que tengas un día extraordinario lleno de aventuras y descubrimientos.`,
-      `¡Saludos, ${usuario}! 🎉 Que la creatividad y la inspiración te acompañen en todo lo que hagas hoy.`,
-      `¡Hey ${usuario}! 🌈 Recuerda que cada nuevo día es una oportunidad para crear algo increíble.`,
-      `¡Hola, increíble ${usuario}! 🚀 Tu presencia ilumina este servidor como una estrella en la noche.`,
-      `¡Qué alegría verte, ${usuario}! 🎨 Espero que encuentres momentos de paz y felicidad en este día.`,
-      `¡Saludos cósmicos, ${usuario}! 🌌 Que la sabiduría del universo guíe tus pasos hacia el éxito.`,
-      `¡Hola, explorador digital ${usuario}! 🔍 Cada interacción es un paso hacia nuevas posibilidades.`,
-      `¡Bienvenido a este momento, ${usuario}! ⭐ Tu energía positiva hace que el mundo sea mejor.`,
-      `¡Hola, visionario ${usuario}! 🔮 Que tus ideas se conviertan en realidades asombrosas.`,
-      `¡Saludos, ${usuario}! 🌸 Como una flor que florece, que tu día se llene de belleza y crecimiento.`
-    ];
-
-    const mensajeAleatorio = respuestasAleatorias[Math.floor(Math.random() * respuestasAleatorias.length)];
-
-    const embed = new EmbedBuilder()
-      .setTitle('👋 ¡Saludo Inteligente!')
-      .setDescription(mensajeAleatorio)
-      .setColor('#9966ff')
-      .setThumbnail(usuario.displayAvatarURL())
-      .setFooter({ text: 'Mensaje generado por IA VK Community' })
-      .setTimestamp();
-
-    await interaction.reply({ embeds: [embed] });
+    const usuario = interaction.user;
+    const saludo = saludos[Math.floor(Math.random() * saludos.length)].replace('{user}', `<@${usuario.id}>`);
+    await interaction.reply(saludo);
   },
 
   name: 'hola',
   async run(message, args, client) {
     const usuario = message.mentions.users.first() || message.author;
+    const saludo = saludos[Math.floor(Math.random() * saludos.length)].replace('{user}', `<@${usuario.id}>`);
+    await message.reply(saludo);
+  },
 
-    const respuestasAleatorias = [
-      `¡Hola ${usuario}! 🌟 Espero que tengas un día extraordinario lleno de aventuras y descubrimientos.`,
-      `¡Saludos, ${usuario}! 🎉 Que la creatividad y la inspiración te acompañen en todo lo que hagas hoy.`,
-      `¡Hey ${usuario}! 🌈 Recuerda que cada nuevo día es una oportunidad para crear algo increíble.`,
-      `¡Hola, increíble ${usuario}! 🚀 Tu presencia ilumina este servidor como una estrella en la noche.`,
-      `¡Qué alegría verte, ${usuario}! 🎨 Espero que encuentres momentos de paz y felicidad en este día.`,
-      `¡Saludos cósmicos, ${usuario}! 🌌 Que la sabiduría del universo guíe tus pasos hacia el éxito.`,
-      `¡Hola, explorador digital ${usuario}! 🔍 Cada interacción es un paso hacia nuevas posibilidades.`,
-      `¡Bienvenido a este momento, ${usuario}! ⭐ Tu energía positiva hace que el mundo sea mejor.`,
-      `¡Hola, visionario ${usuario}! 🔮 Que tus ideas se conviertan en realidades asombrosas.`,
-      `¡Saludos, ${usuario}! 🌸 Como una flor que florece, que tu día se llene de belleza y crecimiento.`
-    ];
+  // Listener global para mensaje normal (sin prefijo)
+  async onMessage(message, client) {
+    if (message.author.bot) return;
 
-    const mensajeAleatorio = respuestasAleatorias[Math.floor(Math.random() * respuestasAleatorias.length)];
+    const contenido = message.content.toLowerCase();
 
-    const embed = new EmbedBuilder()
-      .setTitle('👋 ¡Saludo Inteligente!')
-      .setDescription(mensajeAleatorio)
-      .setColor('#9966ff')
-      .setThumbnail(usuario.displayAvatarURL())
-      .setFooter({ text: 'Mensaje generado por IA VK Community' })
-      .setTimestamp();
+    const patrones = ['hola', 'holaa', 'holaaa', 'holis', 'holi', 'ola', 'olaa', 'wola', 'aloha'];
 
-    await message.reply({ embeds: [embed] });
+    if (patrones.some(p => contenido.startsWith(p))) {
+      const saludo = saludos[Math.floor(Math.random() * saludos.length)].replace('{user}', `<@${message.author.id}>`);
+      await message.channel.send(saludo);
+    }
   }
 };

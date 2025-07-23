@@ -248,7 +248,6 @@ module.exports = {
     }
   },
 
-  // Función para inicializar items por defecto
   initializeDefaultItems(economyDb) {
     economyDb.get('SELECT COUNT(*) as count FROM shop_items', [], (err, row) => {
       if (!err && row.count === 0) {

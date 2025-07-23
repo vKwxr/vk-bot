@@ -1,6 +1,6 @@
 
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const ms = require('ms'); // Necesitarás instalar este paquete
+const ms = require('ms'); 
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -19,7 +19,6 @@ module.exports = {
     const tiempoStr = interaction.options.getString('tiempo');
     const mensaje = interaction.options.getString('mensaje');
 
-    // Convertir tiempo a milisegundos
     let tiempoMs;
     try {
       tiempoMs = ms(tiempoStr);
@@ -40,7 +39,6 @@ module.exports = {
     const tiempoRecordatorio = Date.now() + tiempoMs;
     const fechaRecordatorio = new Date(tiempoRecordatorio);
 
-    // Guardar en base de datos
     client.config.db.run(
       `INSERT INTO reminders (user_id, channel_id, message, remind_at, created_at) VALUES (?, ?, ?, ?, ?)`,
       [
@@ -58,7 +56,6 @@ module.exports = {
           });
         }
 
-        // Programar recordatorio
         setTimeout(async () => {
           try {
             const channel = client.channels.cache.get(interaction.channel.id);
@@ -78,7 +75,6 @@ module.exports = {
                 embeds: [embed] 
               });
 
-              // Eliminar de base de datos
               client.config.db.run(
                 `DELETE FROM reminders WHERE id = ?`,
                 [this.lastID]

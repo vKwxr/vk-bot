@@ -24,7 +24,6 @@ module.exports = {
     await interaction.deferReply();
 
     try {
-      // Usar la nueva API de Mojang
       const response = await axios.get(`https://api.mojang.com/users/profiles/minecraft/${username}`, {
         timeout: 10000
       });
@@ -39,7 +38,6 @@ module.exports = {
       const uuid = playerData.id;
       const realUsername = playerData.name;
 
-      // Usar APIs modernas para las imágenes
       const skinUrl = `https://mc-heads.net/body/${uuid}/600`;
       const avatarUrl = `https://mc-heads.net/avatar/${uuid}/128`;
 
@@ -54,7 +52,7 @@ module.exports = {
           { name: '🎮 Plataforma', value: 'Minecraft Java', inline: false },
           { name: '🆔 UUID', value: `\`${uuid.substring(0, 8)}...\``, inline: false }
         )
-        .setFooter({ text: 'Powered vk Bot' })
+        .setFooter({ text: 'Powered vk' })
         .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
@@ -72,17 +70,14 @@ module.exports = {
 
       await interaction.editReply({ embeds: [embed], components: [row] });
     } catch (error) {
-      // Fallback a otra API
       const fallbackSkinUrl = `https://minotar.net/body/${username}/600.png`;
       const fallbackAvatarUrl = `https://minotar.net/helm/${username}/128.png`;
 
       const embed = new EmbedBuilder()
         .setTitle(`🧱 Skin de ${username}`)
-        .setDescription('⚠️ **Usando API alternativa**')
         .setImage(fallbackSkinUrl)
         .setThumbnail(fallbackAvatarUrl)
         .setColor('#f39c12')
-        .setFooter({ text: 'API alternativa - Minotar' });
 
       await interaction.editReply({ embeds: [embed] });
     }
@@ -123,10 +118,10 @@ module.exports = {
         .setColor('#2ecc71')
         .addFields(
           { name: '👤 Usuario', value: realUsername, inline: true },
-          { name: '🎮 Plataforma', value: 'Minecraft Java', inline: true },
+          { name: '🎮 Plataforma', value: 'Minecraft Java', inline: false },
           { name: '🆔 UUID', value: `\`${uuid.substring(0, 8)}...\``, inline: true }
         )
-        .setFooter({ text: 'Powered by MC-Heads & Mojang API' })
+        .setFooter({ text: 'Powered vK' })
         .setTimestamp();
 
       const row = new ActionRowBuilder().addComponents(
@@ -144,11 +139,9 @@ module.exports = {
 
       const embed = new EmbedBuilder()
         .setTitle(`🧱 Skin de ${username}`)
-        .setDescription('⚠️ **Usando API alternativa**')
         .setImage(fallbackSkinUrl)
         .setThumbnail(fallbackAvatarUrl)
         .setColor('#f39c12')
-        .setFooter({ text: 'API alternativa - Minotar' });
 
       await loadingMsg.edit({ content: null, embeds: [embed] });
     }

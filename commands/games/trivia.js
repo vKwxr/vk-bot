@@ -1,5 +1,11 @@
-
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const {
+  SlashCommandBuilder,
+  EmbedBuilder,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  ComponentType
+} = require('discord.js');
 
 const preguntas = [
   {
@@ -76,124 +82,120 @@ module.exports = {
     const categoria = interaction.options.getString('categoria');
 
     if (activeTrivia.has(userId)) {
-      return interaction.reply({
-        content: '❌ Ya tienes una trivia activa. Termínala primero.',
-        ephemeral: true
-      });
+      return interaction.reply({ content: '❌ Ya tienes una trivia activa.', ephemeral: true });
     }
 
-    // Filtrar preguntas por categoría si se especifica
-    let preguntasFiltradas = preguntas;
+    let filtradas = preguntas;
     if (categoria) {
-      preguntasFiltradas = preguntas.filter(p => 
+      filtradas = preguntas.filter(p =>
         p.categoria.toLowerCase() === categoria.toLowerCase()
       );
     }
 
-    if (preguntasFiltradas.length === 0) {
-      return interaction.reply({
-        content: '❌ No hay preguntas disponibles para esa categoría.',
-        ephemeral: true
-      });
+    if (!filtradas.length) {
+      return interaction.reply({ content: '❌ No hay preguntas disponibles.', ephemeral: true });
     }
 
-    // Seleccionar pregunta aleatoria
-    const preguntaSeleccionada = preguntasFiltradas[
-      Math.floor(Math.random() * preguntasFiltradas.length)
-    ];
+    const pregunta = filtradas[Math.floor(Math.random() * filtradas.length)];
 
-    // Guardar pregunta activa
     activeTrivia.set(userId, {
-      pregunta: preguntaSeleccionada,
-      tiempoInicio: Date.now(),
-      canal: interaction.channel.id
+      pregunta,
+      tiempoInicio: Date.now()
     });
 
     const embed = new EmbedBuilder()
       .setTitle('🧠 Trivia VK Community')
-      .setDescription(preguntaSeleccionada.pregunta)
+      .setDescription(pregunta.pregunta)
       .addFields(
-        { name: '📂 Categoría', value: preguntaSeleccionada.categoria, inline: true },
+        { name: '📂 Categoría', value: pregunta.categoria, inline: true },
         { name: '⏱️ Tiempo límite', value: '30 segundos', inline: true }
       )
       .setColor('#9966ff')
       .setTimestamp();
 
-    // Crear botones para las opciones
     const row1 = new ActionRowBuilder()
       .addComponents(
-        new ButtonBuilder()
-          .setCustomId(`trivia_0_${userId}`)
-          .setLabel(`A) ${preguntaSeleccionada.opciones[0]}`)
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(`trivia_1_${userId}`)
-          .setLabel(`B) ${preguntaSeleccionada.opciones[1]}`)
-          .setStyle(ButtonStyle.Primary)
+        new ButtonBuilder().setCustomId(`triv_0_${userId}`).setLabel(`A) ${pregunta.opciones[0]}`).setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`triv_1_${userId}`).setLabel(`B) ${pregunta.opciones[1]}`).setStyle(ButtonStyle.Primary)
       );
 
     const row2 = new ActionRowBuilder()
       .addComponents(
-        new ButtonBuilder()
-          .setCustomId(`trivia_2_${userId}`)
-          .setLabel(`C) ${preguntaSeleccionada.opciones[2]}`)
-          .setStyle(ButtonStyle.Primary),
-        new ButtonBuilder()
-          .setCustomId(`trivia_3_${userId}`)
-          .setLabel(`D) ${preguntaSeleccionada.opciones[3]}`)
-          .setStyle(ButtonStyle.Primary)
+        new ButtonBuilder().setCustomId(`triv_2_${userId}`).setLabel(`C) ${pregunta.opciones[2]}`).setStyle(ButtonStyle.Primary),
+        new ButtonBuilder().setCustomId(`triv_3_${userId}`).setLabel(`D) ${pregunta.opciones[3]}`).setStyle(ButtonStyle.Primary)
       );
 
-    await interaction.reply({ 
-      embeds: [embed], 
-      components: [row1, row2] 
+    await interaction.reply({ embeds: [embed], components: [row1, row2] });
+
+    const collector = interaction.channel.createMessageComponentCollector({
+      componentType: ComponentType.Button,
+      time: 30000,
+      filter: i => i.user.id === userId && i.customId.includes(`triv_`)
     });
 
-    // Timer para terminar automáticamente
-    setTimeout(async () => {
-      if (activeTrivia.has(userId)) {
-        activeTrivia.delete(userId);
-        
-        try {
-          const timeoutEmbed = new EmbedBuilder()
-            .setTitle('⏰ Tiempo Agotado')
-            .setDescription(`La respuesta correcta era: **${preguntaSeleccionada.opciones[preguntaSeleccionada.correcta]}**`)
-            .setColor('#e74c3c');
+    collector.on('collect', async i => {
+      collector.stop();
+      const index = parseInt(i.customId.split('_')[1]);
+      const trivia = activeTrivia.get(userId);
+      activeTrivia.delete(userId);
 
-          await interaction.editReply({ 
-            embeds: [timeoutEmbed], 
-            components: [] 
-          });
-        } catch (error) {
-          console.error('Error al actualizar mensaje de trivia:', error);
-        }
+      const correcta = trivia.pregunta.correcta;
+      const tiempo = Math.floor((Date.now() - trivia.tiempoInicio) / 1000);
+      const reward = index === correcta ? Math.max(10, 100 - tiempo * 2) : 0;
+
+      if (reward > 0) {
+        const { economyDb } = client.config;
+        economyDb.run(
+          `INSERT INTO economy (user_id, wallet) VALUES (?, ?)
+          ON CONFLICT(user_id) DO UPDATE SET wallet = wallet + ?`,
+          [userId, reward, reward]
+        );
       }
-    }, 30000);
+
+      const resultEmbed = new EmbedBuilder()
+        .setTitle(index === correcta ? '✅ ¡Correcto!' : '❌ Incorrecto')
+        .setDescription(index === correcta
+          ? `Ganaste **${reward} monedas**`
+          : `La respuesta correcta era: **${pregunta.opciones[correcta]}**`)
+        .setColor(index === correcta ? '#00ff00' : '#e74c3c');
+
+      await i.update({ embeds: [resultEmbed], components: [] });
+    });
+
+    collector.on('end', async collected => {
+      if (!collected.size && activeTrivia.has(userId)) {
+        const trivia = activeTrivia.get(userId);
+        activeTrivia.delete(userId);
+        const timeoutEmbed = new EmbedBuilder()
+          .setTitle('⏰ Tiempo Agotado')
+          .setDescription(`La respuesta correcta era: **${trivia.pregunta.opciones[trivia.pregunta.correcta]}**`)
+          .setColor('#ff5555');
+        await interaction.editReply({ embeds: [timeoutEmbed], components: [] });
+      }
+    });
   },
 
   name: 'trivia',
+
   async run(message, args, client) {
     const userId = message.author.id;
 
     if (activeTrivia.has(userId)) {
-      return message.reply('❌ Ya tienes una trivia activa. Termínala primero.');
+      return message.reply('❌ Ya tienes una trivia activa.');
     }
 
-    const preguntaSeleccionada = preguntas[Math.floor(Math.random() * preguntas.length)];
+    const pregunta = preguntas[Math.floor(Math.random() * preguntas.length)];
+    const tiempoInicio = Date.now();
 
-    activeTrivia.set(userId, {
-      pregunta: preguntaSeleccionada,
-      tiempoInicio: Date.now(),
-      canal: message.channel.id
-    });
+    activeTrivia.set(userId, { pregunta, tiempoInicio });
 
     const embed = new EmbedBuilder()
       .setTitle('🧠 Trivia VK Community')
-      .setDescription(preguntaSeleccionada.pregunta)
+      .setDescription(pregunta.pregunta)
       .addFields(
-        ...preguntaSeleccionada.opciones.map((opcion, index) => ({
-          name: `${String.fromCharCode(65 + index)})`,
-          value: opcion,
+        ...pregunta.opciones.map((op, i) => ({
+          name: `${String.fromCharCode(65 + i)})`,
+          value: op,
           inline: true
         }))
       )
@@ -201,65 +203,39 @@ module.exports = {
       .setFooter({ text: 'Responde con A, B, C o D' })
       .setTimestamp();
 
-    const triviaMessage = await message.reply({ embeds: [embed] });
+    await message.reply({ embeds: [embed] });
 
-    const filter = m => m.author.id === userId && 
+    const filter = m =>
+      m.author.id === userId &&
       ['a', 'b', 'c', 'd'].includes(m.content.toLowerCase());
-    
-    const collector = message.channel.createMessageCollector({ 
-      filter, 
-      time: 30000, 
-      max: 1 
-    });
 
-    collector.on('collect', async (response) => {
-      const respuesta = response.content.toLowerCase();
-      const indiceRespuesta = respuesta.charCodeAt(0) - 97; // a=0, b=1, etc.
+    const collector = message.channel.createMessageCollector({ filter, time: 30000, max: 1 });
 
+    collector.on('collect', async m => {
+      const letra = m.content.toLowerCase();
+      const index = letra.charCodeAt(0) - 97;
+      const trivia = activeTrivia.get(userId);
       activeTrivia.delete(userId);
 
-      if (indiceRespuesta === preguntaSeleccionada.correcta) {
-        const tiempoRespuesta = (Date.now() - activeTrivia.get(userId)?.tiempoInicio || Date.now()) / 1000;
-        const monedas = Math.floor(100 + (30 - tiempoRespuesta) * 2);
+      const correcta = trivia.pregunta.correcta;
+      const tiempo = Math.floor((Date.now() - trivia.tiempoInicio) / 1000);
+      const reward = index === correcta ? Math.max(10, 100 - tiempo * 2) : 0;
 
-        // Actualizar economía
+      if (index === correcta) {
         const { economyDb } = client.config;
-        economyDb.get(
-          `SELECT * FROM economy WHERE user_id = ?`,
-          [userId],
-          (err, row) => {
-            if (!row) {
-              economyDb.run(
-                `INSERT INTO economy (user_id, wallet) VALUES (?, ?)`,
-                [userId, monedas]
-              );
-            } else {
-              economyDb.run(
-                `UPDATE economy SET wallet = wallet + ? WHERE user_id = ?`,
-                [monedas, userId]
-              );
-            }
-          }
+        economyDb.run(
+          `INSERT INTO economy (user_id, wallet) VALUES (?, ?)
+          ON CONFLICT(user_id) DO UPDATE SET wallet = wallet + ?`,
+          [userId, reward, reward]
         );
-
-        const embed = new EmbedBuilder()
-          .setTitle('✅ ¡Correcto!')
-          .setDescription(`¡Respuesta correcta! Has ganado **${monedas} monedas**`)
-          .setColor('#00ff00');
-
-        await response.reply({ embeds: [embed] });
+        await m.reply(`✅ ¡Correcto! Ganaste **${reward} monedas**`);
       } else {
-        const embed = new EmbedBuilder()
-          .setTitle('❌ Incorrecto')
-          .setDescription(`La respuesta correcta era: **${preguntaSeleccionada.opciones[preguntaSeleccionada.correcta]}**`)
-          .setColor('#e74c3c');
-
-        await response.reply({ embeds: [embed] });
+        await m.reply(`❌ Incorrecto. La respuesta correcta era: **${pregunta.opciones[correcta]}**`);
       }
     });
 
-    collector.on('end', (collected) => {
-      if (collected.size === 0) {
+    collector.on('end', col => {
+      if (col.size === 0) {
         activeTrivia.delete(userId);
         message.channel.send('⏰ Tiempo agotado para responder la trivia.');
       }

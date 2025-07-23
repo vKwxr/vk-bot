@@ -16,7 +16,7 @@ module.exports = {
     const embed = new EmbedBuilder()
       .setTitle(`👤 Información de ${user.username}`)
       .setThumbnail(user.displayAvatarURL({ dynamic: true }))
-      .setColor('#9966ff')
+      .setColor('#000000ff')
       .addFields(
         { name: '🆔 ID', value: user.id, inline: true },
         { name: '📅 Cuenta Creada', value: `<t:${Math.floor(user.createdTimestamp / 1000)}:D>`, inline: true },
@@ -50,7 +50,7 @@ module.exports = {
     const embed = new EmbedBuilder()
       .setTitle(`👤 Información de ${user.username}`)
       .setThumbnail(user.displayAvatarURL({ dynamic: true }))
-      .setColor('#9966ff')
+      .setColor('#000000ff')
       .addFields(
         { name: '🆔 ID', value: user.id, inline: true },
         { name: '📅 Cuenta Creada', value: `<t:${Math.floor(user.createdTimestamp / 1000)}:D>`, inline: true },

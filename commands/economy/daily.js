@@ -1,4 +1,3 @@
-
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
@@ -22,7 +21,7 @@ module.exports = {
           });
         }
 
-        const amount = Math.floor(Math.random() * 500) + 100; // 100-600 coins
+        const amount = Math.floor(Math.random() * 61) + 40; 
 
         if (row) {
           economyDb.run(
@@ -62,7 +61,7 @@ module.exports = {
           return message.reply('❌ Ya has reclamado tu recompensa diaria hoy. Vuelve mañana.');
         }
 
-        const amount = Math.floor(Math.random() * 500) + 100;
+        const amount = Math.floor(Math.random() * 61) + 40; 
 
         if (row) {
           economyDb.run(

@@ -1,0 +1,82 @@
+const { SlashCommandBuilder } = require('discord.js');
+const { getGiveawayData, getAllGiveaways, updateGiveawayStatus, deleteGiveaway } = require('../../utils/giveawayUtils');
+
+module.exports = {
+  data: new SlashCommandBuilder()
+    .setName('giveaway-manage')
+    .setDescription('Administra giveaways existentes')
+    .addSubcommand(sub =>
+      sub.setName('list')
+        .setDescription('Muestra todos los giveaways activos o finalizados'))
+    .addSubcommand(sub =>
+      sub.setName('pause')
+        .setDescription('Pausa un giveaway')
+        .addStringOption(opt =>
+          opt.setName('message_id')
+            .setDescription('ID del mensaje del giveaway')
+            .setRequired(true)))
+    .addSubcommand(sub =>
+      sub.setName('resume')
+        .setDescription('Reanuda un giveaway pausado')
+        .addStringOption(opt =>
+          opt.setName('message_id')
+            .setDescription('ID del mensaje del giveaway')
+            .setRequired(true)))
+    .addSubcommand(sub =>
+      sub.setName('delete')
+        .setDescription('Elimina un giveaway permanentemente')
+        .addStringOption(opt =>
+          opt.setName('message_id')
+            .setDescription('ID del mensaje del giveaway')
+            .setRequired(true))),
+
+  async execute(interaction) {
+    const sub = interaction.options.getSubcommand();
+
+    try {
+      if (sub === 'list') {
+        const giveaways = await getAllGiveaways();
+        if (!giveaways || giveaways.length === 0) {
+          return interaction.reply({ content: '📭 No hay giveaways registrados.', ephemeral: true });
+        }
+
+        const list = giveaways.map(g => `🎁 **${g.prize}** | Estado: \`${g.status}\` | ID: \`${g.messageId}\``).join('\n');
+        return interaction.reply({ content: `📋 Lista de Giveaways:\n${list}`, ephemeral: true });
+      }
+
+      const messageId = interaction.options.getString('message_id');
+      const giveawayData = await getGiveawayData(messageId);
+
+      if (!giveawayData) {
+        return interaction.reply({ content: '❌ No se encontró el giveaway con ese ID.', ephemeral: true });
+      }
+
+      if (sub === 'pause') {
+        if (giveawayData.status === 'paused') {
+          return interaction.reply({ content: '⏸️ El giveaway ya está pausado.', ephemeral: true });
+        }
+
+        await updateGiveawayStatus(messageId, 'paused');
+        return interaction.reply({ content: '✅ Giveaway pausado correctamente.', ephemeral: true });
+      }
+
+      if (sub === 'resume') {
+        if (giveawayData.status !== 'paused') {
+          return interaction.reply({ content: '▶️ El giveaway no está pausado.', ephemeral: true });
+        }
+
+        await updateGiveawayStatus(messageId, 'active');
+        return interaction.reply({ content: '✅ Giveaway reanudado correctamente.', ephemeral: true });
+      }
+
+      if (sub === 'delete') {
+        await deleteGiveaway(messageId);
+        return interaction.reply({ content: '🗑️ Giveaway eliminado permanentemente.', ephemeral: true });
+      }
+
+    } catch (err) {
+      console.error('❌ Error en giveaway-manage:', err);
+      return interaction.reply({ content: '❌ Hubo un error al ejecutar el comando.', ephemeral: true });
+    }
+  }
+};

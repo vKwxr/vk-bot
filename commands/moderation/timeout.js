@@ -1,5 +1,4 @@
-
-const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
+const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
 
 function parseTime(timeString) {
   const match = timeString.match(/^(\d+)([smhd])$/);
@@ -72,35 +71,26 @@ module.exports = {
     try {
       await member.timeout(duration, reason);
 
-      const embed = new EmbedBuilder()
-        .setTitle('🔇 Usuario Silenciado')
-        .setColor('#e74c3c')
-        .addFields(
-          { name: '👤 Usuario', value: user.tag, inline: true },
-          { name: '🛡️ Moderador', value: interaction.user.tag, inline: true },
-          { name: '⏰ Duración', value: timeString, inline: true },
-          { name: '📝 Razón', value: reason, inline: false }
-        )
-        .setThumbnail(user.displayAvatarURL())
-        .setTimestamp();
-
-      await interaction.reply({ embeds: [embed] });
+      return interaction.reply({
+        content: `🔇 **${user.tag}** ha sido silenciado por **${interaction.user.tag}**\n⏰ Duración: \`${timeString}\`\n📝 Razón: ${reason}`,
+        ephemeral: false
+      });
     } catch (error) {
-      await interaction.reply({
+      return interaction.reply({
         content: '❌ Error al silenciar al usuario.',
         ephemeral: true
       });
     }
   },
 
-  name: 'mute',
-  async run(message, args, client) {
+  name: 'timeout',
+  async run(message, args, client, prefix) {
     if (!message.member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) {
       return message.reply('❌ No tienes permisos para silenciar usuarios.');
     }
 
     const user = message.mentions.users.first();
-    if (!user) return message.reply('❌ Debes mencionar a un usuario. Uso: `vkmute @usuario 10m razón`');
+    if (!user) return message.reply(`❌ Debes mencionar a un usuario. Uso: \`${prefix}timeout @usuario 10m razón\``);
 
     const timeString = args[1];
     if (!timeString) return message.reply('❌ Debes especificar el tiempo.');
@@ -121,20 +111,38 @@ module.exports = {
 
     try {
       await member.timeout(duration, reason);
-      const embed = new EmbedBuilder()
-        .setTitle('🔇 Usuario Silenciado')
-        .setColor('#e74c3c')
-        .addFields(
-          { name: '👤 Usuario', value: user.tag, inline: true },
-          { name: '🛡️ Moderador', value: message.author.tag, inline: true },
-          { name: '⏰ Duración', value: timeString, inline: true },
-          { name: '📝 Razón', value: reason, inline: false }
-        )
-        .setTimestamp();
 
-      await message.channel.send({ embeds: [embed] });
+      return message.channel.send(`🔇 **${user.tag}** ha sido silenciado por **${message.author.tag}**\n⏰ Duración: \`${timeString}\`\n📝 Razón: ${reason}`);
     } catch (error) {
-      await message.reply('❌ Error al silenciar al usuario.');
+      return message.reply('❌ Error al silenciar al usuario.');
+    }
+  },
+
+  async autoTimeoutOnReply(message, prefix) {
+    if (!message.guild) return;
+    if (message.author.bot) return;
+
+    if (!message.member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) return;
+
+    if (!message.reference) return;
+
+    if (!message.content.startsWith(prefix)) return;
+
+    const repliedMessage = await message.channel.messages.fetch(message.reference.messageId).catch(() => null);
+    if (!repliedMessage) return;
+
+    if (repliedMessage.member?.permissions.has(PermissionsBitField.Flags.ModerateMembers)) return;
+
+    if (repliedMessage.author.id === message.guild.ownerId) return;
+
+    const muteDuration = 10 * 60 * 1000; // 10 min
+    const reason = `Mute automático por responder con comando del staff ${message.author.tag}`;
+
+    try {
+      await repliedMessage.member.timeout(muteDuration, reason);
+
+      await message.channel.send(`🔇 **${repliedMessage.author.tag}** ha sido silenciado automáticamente por responder a un comando de staff.\n⏰ Duración: 10 minutos\n📝 Razón: ${reason}`);
+    } catch {
     }
   }
 };

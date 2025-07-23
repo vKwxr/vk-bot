@@ -34,7 +34,7 @@ module.exports = {
         .setDescription('Duración en minutos (por defecto: sin límite)')
         .setRequired(false)
         .setMinValue(1)
-        .setMaxValue(1440)), // Max 24 horas
+        .setMaxValue(1440)),
 
   async execute(interaction, client) {
     const pregunta = interaction.options.getString('pregunta');
@@ -44,11 +44,11 @@ module.exports = {
       interaction.options.getString('opcion3'),
       interaction.options.getString('opcion4'),
       interaction.options.getString('opcion5')
-    ].filter(Boolean); // Filtrar opciones nulas
+    ].filter(Boolean); 
 
     const duracion = interaction.options.getInteger('duracion');
 
-    // Emojis para las opciones
+    
     const emojis = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣'];
 
     const embed = new EmbedBuilder()
@@ -65,7 +65,6 @@ module.exports = {
 
     const mensaje = await interaction.reply({ embeds: [embed], fetchReply: true });
 
-    // Añadir reacciones
     for (let i = 0; i < opciones.length; i++) {
       try {
         await mensaje.react(emojis[i]);
@@ -74,7 +73,6 @@ module.exports = {
       }
     }
 
-    // Si tiene duración, programar finalización
     if (duracion) {
       setTimeout(async () => {
         try {

@@ -10,9 +10,9 @@ module.exports = {
     const guild = interaction.guild;
     
     const embed = new EmbedBuilder()
-      .setTitle(`📊 Información de ${guild.name}`)
+      .setTitle(`Información de ${guild.name}`)
       .setThumbnail(guild.iconURL({ dynamic: true }))
-      .setColor('#9966ff')
+      .setColor('#1d0252ff')
       .addFields(
         { name: '🆔 ID del Servidor', value: guild.id, inline: true },
         { name: '👑 Propietario', value: `<@${guild.ownerId}>`, inline: true },
@@ -20,8 +20,8 @@ module.exports = {
         { name: '👥 Miembros', value: guild.memberCount.toString(), inline: true },
         { name: '💬 Canales', value: guild.channels.cache.size.toString(), inline: true },
         { name: '😀 Emojis', value: guild.emojis.cache.size.toString(), inline: true },
-        { name: '🛡️ Nivel de Verificación', value: guild.verificationLevel.toString(), inline: true },
-        { name: '🔒 Filtro de Contenido', value: guild.explicitContentFilter.toString(), inline: true },
+        { name: '🛡️ Nivel de Verificación', value: guild.verificationLevel.toString(), inline: false },
+        { name: '🔒 Filtro de Contenido', value: guild.explicitContentFilter.toString(), inline: false },
         { name: '📈 Boost Level', value: guild.premiumTier.toString(), inline: true }
       )
       .setTimestamp();
@@ -38,7 +38,7 @@ module.exports = {
     const guild = message.guild;
     
     const embed = new EmbedBuilder()
-      .setTitle(`📊 Información de ${guild.name}`)
+      .setTitle(`Información de ${guild.name}`)
       .setThumbnail(guild.iconURL({ dynamic: true }))
       .setColor('#9966ff')
       .addFields(

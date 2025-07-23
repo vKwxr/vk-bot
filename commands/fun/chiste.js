@@ -1,27 +1,109 @@
-
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 
 const chistes = [
-  "¿Qué hace una abeja en el gimnasio? ¡Zum-ba!",
-  "¿Cuál es el café más peligroso del mundo? ¡El ex-preso!",
-  "¿Qué le dice un taco a otro taco? ¿Quieres que vayamos por unas quesadillas?",
-  "¿Por qué los peces no pagan el alquiler? Porque viven en el agua y está gratis.",
-  "¿Qué le dice una impresora a otra impresora? ¡Esa hoja es tuya o es impresión mía!",
-  "¿Cuál es el animal más antiguo? La cebra, porque está en blanco y negro.",
-  "¿Qué hace un perro con un taladro? ¡Taladrando!",
-  "¿Por qué los pájaros vuelan hacia el sur en invierno? Porque caminando tardarían mucho.",
-  "¿Qué le dice un semáforo a otro? No me mires que me estoy cambiando.",
-  "¿Cuál es el último animal en subir al arca de Noé? El del-fin.",
-  "¿Qué hace una abeja en un auto? ¡Va zum-bando!",
-  "¿Por qué el libro de matemáticas estaba triste? Porque tenía muchos problemas.",
-  "¿Qué le dice un jardinero a otro? Seamos felices mientras podamos.",
-  "¿Cuál es la fruta más paciente? Es-pera.",
-  "¿Qué hace un dinosaurio cuando llueve? Se dino-moja.",
-  "¿Por qué los elefantes no usan computadora? Porque tienen miedo del mouse.",
-  "¿Qué hace un perro mago? ¡Labrador!",
-  "¿Cuál es el colmo de un electricista? Que su mujer se llame Luz y que sus hijos no le hagan caso.",
-  "¿Qué le dice una banana a otra banana? ¡Nada, las bananas no hablan!",
-  "¿Por qué la estadística es como la ropa interior? Porque lo importante no es lo que se ve, sino lo que oculta."
+  "—Cariño, ¿me amas? —Sí. —¿Y cuánto? —Como el internet… cuando más te necesito, menos funcionas.",
+  "Si el trabajo es salud… ¡que trabajen los enfermos!",
+  "No tengo complejo de superioridad… ¡soy superior y punto!",
+  "El matrimonio es la principal causa de divorcio.",
+  "—¿Por qué estás hablando solo? —Necesito un consejo experto.",
+  "Si la montaña viene hacia ti… ¡corre, es un derrumbe!",
+  "—¿Te casarías conmigo? —¿Es broma? —Sí. —¡Menos mal!",
+  "El dinero no da la felicidad… pero prefiero llorar en Dubái.",
+  "Mi ex me dejó por celoso… ¿y qué hace hablando con otro ahora?",
+  "Yo no ronco… sueño que soy una moto.",
+  "Trabajo bajo presión… cuando mi jefe grita.",
+  "—¿Tú estudias o trabajas? —Sobrevivo.",
+  "No tengo problemas de actitud… tú tienes problemas de percepción.",
+  "¿Mi plan para el futuro? Sobrevivir.",
+  "Los lunes deberían estar prohibidos… como mi ex.",
+  "Mi amor por ti es como mis ganas de trabajar… no existe.",
+  "¿Mi sueño? Dormir sin despertador.",
+  "Estoy en forma… redonda, pero en forma.",
+  "¿Gym? Pensé que decías ‘Gin’… y acepté.",
+  "El matrimonio es una relación donde uno siempre tiene razón… y el otro es el esposo.",
+  "Mi novia me dijo que necesito madurar… así que dejé de responderle.",
+  "¡Me cambié a la dieta del whisky… ya bajé dos parejas!",
+  "Si el amor es ciego… ¿por qué la ropa interior es tan cara?",
+  "No soy antisocial… es que no me gusta la gente.",
+  "El sexo es como el WiFi… cuando está libre, es mejor.",
+  "¿Relación seria? Solo con la pizza.",
+  "Mi ex decía que nunca encontraría a alguien como ella… ¡y menos mal!",
+  "No trabajo bajo presión… trabajo bajo amenazas.",
+  "Si las miradas mataran… yo sería un asesino serial.",
+  "Los lunes deberían ser opcionales.",
+  "La pereza y yo tenemos una relación seria.",
+  "La dieta empieza… el lunes que viene.",
+  "El trabajo en equipo es perfecto… si el equipo trabaja y yo miro.",
+  "La sinceridad me ha hecho perder amigos… y clientes.",
+  "Las oportunidades tocan una vez… las desgracias no paran de llamar.",
+  "Mi horóscopo dice: ‘Hoy tampoco harás nada productivo’… acertó.",
+  "Mi billetera está más vacía que mi agenda social.",
+  "No tengo enemigos… todos se fueron solos.",
+  "A veces me siento inútil… pero luego recuerdo a mi ex.",
+  "¡Voy tan lento que hasta mi sombra me adelanta!",
+  "Si me pagaran por dormir… sería millonario.",
+  "El sarcasmo es mi idioma nativo.",
+  "No sufro de locura… la disfruto.",
+  "El trabajo duro nunca mató a nadie… pero, ¿para qué arriesgarse?",
+  "La paciencia es un árbol de raíz amarga… y yo soy alérgico.",
+  "El dinero va y viene… pero yo siempre lo espero y nunca vuelve.",
+  "La vida me debe varias explicaciones.",
+  "Los errores se pagan… por eso vivo en quiebra.",
+  "¿Plan de ahorro? Sí… ahorro excusas.",
+  "Mi talento especial es arruinarlo todo con humor.",
+  "No procrastino… solo pospongo estratégicamente.",
+  "No he fallado… solo encontré 100 formas de hacerlo peor.",
+  "La vida es corta… como mi sueldo.",
+  "Si las miradas pudieran matar… el transporte público sería un cementerio.",
+  "No tengo defectos… tengo ‘efectos especiales’.",
+  "Dios aprieta… y mi jefe también.",
+  "El amor no se busca… se factura.",
+  "No me falta plata… me sobra mes.",
+  "No soy egoísta… me quiero mucho.",
+  "¿Por qué trabajo? Porque no nací millonario.",
+  "Me encanta el trabajo… puedo mirarlo horas.",
+  "Dicen que soy frío… pero es el corazón.",
+  "Vivo al límite… de mi tarjeta de crédito.",
+  "Mi filosofía: vive y deja vivir… menos a mi ex.",
+  "¿Paciencia? Eso es para los que no tienen internet.",
+  "¿Amigos? Solo en la Play.",
+  "Mis hobbies: dormir y pensar en dormir.",
+  "Mi familia me quiere… porque no tienen opción.",
+  "El sarcasmo debería ser considerado idioma oficial.",
+  "No tengo tiempo… tengo memes.",
+  "Si me buscas… búscame en Netflix.",
+  "Los lunes: esa broma sin gracia de la semana.",
+  "El lunes y yo: relación tóxica.",
+  "El café: mi mejor amigo tóxico.",
+  "Mi sueldo es como la fe… invisible.",
+  "¿Proyectos? Sobrevivir al viernes.",
+  "El amor y yo… historias separadas.",
+  "Los jefes caen del cielo… como los meteoritos.",
+  "El lunes me odia… y yo le devuelvo el favor.",
+  "Mi humor es como mi vida amorosa… negro y solitario.",
+  "Soy tan flojo que me da pereza explicar mi pereza.",
+  "Los problemas me buscan… deben amarme.",
+  "No soy amargado… soy realista.",
+  "La ironía y yo… mejores amigos.",
+  "Si la vida te da limones… échalos al tequila.",
+  "¿Romántico? Sí… con la comida.",
+  "Mi deporte favorito: evitar problemas.",
+  "No soy raro… soy edición limitada.",
+  "Mi paz mental cuesta… y nadie paga.",
+  "El karma y yo nos llevamos bien… me visita diario.",
+  "Mis sueños no caben en esta quincena.",
+  "Dicen que la vida es dura… y la mía es licenciada.",
+  "Mi dieta: lo que hay y cuando se pueda.",
+  "¿Salir? Solo si es al refrigerador.",
+  "Mi cuenta bancaria se ríe de mí.",
+  "No soy flojo… estoy en modo ahorro de energía.",
+  "Me gusta la gente… pero lejos.",
+  "¿Mi pasión? Evitar llamadas.",
+  "El sarcasmo es el idioma de los inteligentes.",
+  "¿El trabajo? Una serie de terror sin final.",
+  "El amor apesta… por eso uso desodorante.",
+  "La suerte me dejó en visto.",
+  "Mi vida amorosa es como el WiFi público… todos la usan, pero nunca funciona bien."
 ];
 
 module.exports = {
@@ -31,28 +113,12 @@ module.exports = {
 
   async execute(interaction, client) {
     const chisteAleatorio = chistes[Math.floor(Math.random() * chistes.length)];
-
-    const embed = new EmbedBuilder()
-      .setTitle('😂 ¡Hora del Chiste!')
-      .setDescription(chisteAleatorio)
-      .setColor('#ffff00')
-      .setFooter({ text: 'VK Community Bot • Chistes', iconURL: client.user.displayAvatarURL() })
-      .setTimestamp();
-
-    await interaction.reply({ embeds: [embed] });
+    await interaction.reply(`😂 ${chisteAleatorio}`);
   },
 
   name: 'chiste',
   async run(message, args, client) {
     const chisteAleatorio = chistes[Math.floor(Math.random() * chistes.length)];
-
-    const embed = new EmbedBuilder()
-      .setTitle('😂 ¡Hora del Chiste!')
-      .setDescription(chisteAleatorio)
-      .setColor('#ffff00')
-      .setFooter({ text: 'VK Community Bot • Chistes', iconURL: client.user.displayAvatarURL() })
-      .setTimestamp();
-
-    await message.reply({ embeds: [embed] });
+    await message.reply(`😂 ${chisteAleatorio}`);
   }
 };

@@ -25,8 +25,7 @@ module.exports = {
 
     const canal = interaction.options.getChannel('canal');
 
-    // Verifica que el canal sea un canal de texto
-    if (canal.type !== 0) { // 0 es texto en discord.js v14
+    if (canal.type !== 0) { 
       return interaction.reply({
         content: '❌ El canal debe ser un canal de texto.',
         ephemeral: true

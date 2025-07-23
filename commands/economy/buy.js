@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -43,16 +43,16 @@ module.exports = {
           .setDescription('No hay artículos disponibles en la tienda.')
           .setColor('#ff0000');
 
-        return isInteraction 
+        return isInteraction
           ? await context.reply({ embeds: [embed], ephemeral: true })
           : await context.reply({ embeds: [embed] });
       }
 
       const embed = new EmbedBuilder()
         .setTitle('🛒 Tienda VK - Compra Rápida')
-        .setDescription('Selecciona un artículo del menú para comprarlo directamente')
+        .setDescription('Selecciona un artículo del menú para comprarlo directamente\n¿Quieres que el comando /buy también tenga animaciones o feedback visual como botones o menús desplegables?')
         .setColor('#9966ff')
-        .setFooter({ text: 'VK Community • Sistema de Tienda' })
+        .setFooter({ text: 'vK • Sistema de Tienda' })
         .setTimestamp();
 
       const selectMenu = new StringSelectMenuBuilder()
@@ -80,9 +80,16 @@ module.exports = {
 
       const row = new ActionRowBuilder().addComponents(selectMenu);
 
-      return isInteraction 
-        ? await context.reply({ embeds: [embed], components: [row] })
-        : await context.reply({ embeds: [embed], components: [row] });
+      const homeButton = new ButtonBuilder()
+        .setCustomId('shop_home')
+        .setLabel('🏠 Inicio')
+        .setStyle(ButtonStyle.Primary);
+
+      const rowButtons = new ActionRowBuilder().addComponents(homeButton);
+
+      return isInteraction
+        ? await context.reply({ embeds: [embed], components: [row, rowButtons] })
+        : await context.reply({ embeds: [embed], components: [row, rowButtons] });
     });
   },
 
@@ -97,7 +104,7 @@ module.exports = {
           .setDescription('Usa `/daily` para crear tu cuenta de economía.')
           .setColor('#ff0000');
 
-        return isInteraction 
+        return isInteraction
           ? context.reply({ embeds: [embed], ephemeral: true })
           : context.reply({ embeds: [embed] });
       }
@@ -109,7 +116,7 @@ module.exports = {
             .setDescription(`No se encontró "${itemName}" en la tienda.\nUsa \`/shop\` para ver los artículos disponibles.`)
             .setColor('#ff0000');
 
-          return isInteraction 
+          return isInteraction
             ? context.reply({ embeds: [embed], ephemeral: true })
             : context.reply({ embeds: [embed] });
         }
@@ -120,7 +127,7 @@ module.exports = {
             .setDescription(`${item.emoji} **${item.name}** está agotado.`)
             .setColor('#ff0000');
 
-          return isInteraction 
+          return isInteraction
             ? context.reply({ embeds: [embed], ephemeral: true })
             : context.reply({ embeds: [embed] });
         }
@@ -131,12 +138,11 @@ module.exports = {
             .setDescription(`Necesitas **$${item.price}** pero solo tienes **$${userEconomy.wallet}**.`)
             .setColor('#ff0000');
 
-          return isInteraction 
+          return isInteraction
             ? context.reply({ embeds: [embed], ephemeral: true })
             : context.reply({ embeds: [embed] });
         }
 
-        // Realizar compra
         economyDb.run('UPDATE economy SET wallet = wallet - ? WHERE user_id = ?', [item.price, user.id]);
 
         if (item.stock > 0) {
@@ -158,10 +164,10 @@ module.exports = {
             { name: '📦 Artículo', value: item.description, inline: false }
           )
           .setColor('#00ff00')
-          .setFooter({ text: 'VK Community • ¡Gracias por tu compra!' })
+          .setFooter({ text: 'vK • ¡Gracias por tu compra!' })
           .setTimestamp();
 
-        return isInteraction 
+        return isInteraction
           ? context.reply({ embeds: [embed] })
           : context.reply({ embeds: [embed] });
       });

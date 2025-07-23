@@ -1,4 +1,3 @@
-
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
@@ -8,8 +7,25 @@ module.exports = {
 
   async execute(interaction, client) {
     const userId = interaction.user.id;
+    const member = await interaction.guild.members.fetch(userId);
 
-    client.config.economyDb.get(
+    // Lista de roles con bonus
+    const rolesBonus = [
+      { name: 'Patrocinador', bonus: 0.5 },
+      { name: 'VIP', bonus: 0.25 }
+    ];
+
+    let bonusMultiplier = 0;
+    for (const role of rolesBonus) {
+      const guildRole = interaction.guild.roles.cache.find(r => r.name === role.name);
+      if (guildRole && member.roles.cache.has(guildRole.id)) {
+        bonusMultiplier += role.bonus;
+      }
+    }
+
+    const { economyDb } = client.config;
+
+    economyDb.get(
       `SELECT * FROM economy WHERE user_id = ?`,
       [userId],
       async (err, row) => {
@@ -22,9 +38,9 @@ module.exports = {
         }
 
         const now = new Date();
-        const lastWeekly = row ? new Date(row.last_weekly) : null;
+        const lastWeekly = row?.last_weekly ? new Date(row.last_weekly) : null;
 
-        // Verificar si han pasado 7 días
+        // Validar si ya lo reclamó
         if (lastWeekly && (now - lastWeekly) < 7 * 24 * 60 * 60 * 1000) {
           const timeLeft = 7 * 24 * 60 * 60 * 1000 - (now - lastWeekly);
           const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
@@ -32,7 +48,7 @@ module.exports = {
 
           const embed = new EmbedBuilder()
             .setTitle('⏰ Recompensa Semanal')
-            .setDescription(`Ya reclamaste tu recompensa semanal.\nPodrás reclamar la siguiente en **${hoursLeft}h ${minutesLeft}m**`)
+            .setDescription(`Ya reclamaste tu recompensa semanal.\nPodrás volver en **${hoursLeft}h ${minutesLeft}m**`)
             .setColor('#ff4444')
             .setThumbnail(interaction.user.displayAvatarURL())
             .setTimestamp();
@@ -40,91 +56,20 @@ module.exports = {
           return interaction.reply({ embeds: [embed] });
         }
 
-        // Calcular recompensa (entre 5000 y 15000)
-        const baseReward = Math.floor(Math.random() * 10001) + 5000;
-        const bonus = Math.floor(Math.random() * 5001); // Bonus aleatorio
-        const totalReward = baseReward + bonus;
+        // Cálculo de recompensa
+        const baseReward = Math.floor(Math.random() * 4001) + 3000; // 3000 - 7000
+        const bonusExtra = Math.floor(baseReward * bonusMultiplier);
+        const bonusRandom = Math.floor(Math.random() * 2001); // 0 - 2000
+        const totalReward = baseReward + bonusExtra + bonusRandom;
 
+        // Guardar en la DB
         if (row) {
-          // Actualizar usuario existente
-          client.config.economyDb.run(
-            `UPDATE economy SET wallet = wallet + ?, last_weekly = ? WHERE user_id = ?`,
-            [totalReward, now.toISOString(), userId],
-            function(err) {
-              if (err) console.error(err);
-            }
-          );
-        } else {
-          // Crear nuevo usuario
-          client.config.economyDb.run(
-            `INSERT INTO economy (user_id, wallet, last_weekly) VALUES (?, ?, ?)`,
-            [userId, totalReward, now.toISOString()],
-            function(err) {
-              if (err) console.error(err);
-            }
-          );
-        }
-
-        const embed = new EmbedBuilder()
-          .setTitle('📅 Recompensa Semanal Reclamada')
-          .setDescription(`¡Has recibido tu recompensa semanal!`)
-          .addFields(
-            { name: '💰 Recompensa Base', value: `**${baseReward.toLocaleString()}** monedas`, inline: true },
-            { name: '🎁 Bonus', value: `**${bonus.toLocaleString()}** monedas`, inline: true },
-            { name: '🏆 Total Recibido', value: `**${totalReward.toLocaleString()}** monedas`, inline: false }
-          )
-          .setColor('#00ff88')
-          .setThumbnail(interaction.user.displayAvatarURL())
-          .setFooter({ text: 'Vuelve en 7 días para tu siguiente recompensa' })
-          .setTimestamp();
-
-        await interaction.reply({ embeds: [embed] });
-      }
-    );
-  },
-
-  name: 'weekly',
-  async run(message, args, client) {
-    const userId = message.author.id;
-
-    client.config.economyDb.get(
-      `SELECT * FROM economy WHERE user_id = ?`,
-      [userId],
-      async (err, row) => {
-        if (err) {
-          console.error(err);
-          return message.reply('❌ Error al acceder a la base de datos.');
-        }
-
-        const now = new Date();
-        const lastWeekly = row ? new Date(row.last_weekly) : null;
-
-        if (lastWeekly && (now - lastWeekly) < 7 * 24 * 60 * 60 * 1000) {
-          const timeLeft = 7 * 24 * 60 * 60 * 1000 - (now - lastWeekly);
-          const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
-          const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-
-          const embed = new EmbedBuilder()
-            .setTitle('⏰ Recompensa Semanal')
-            .setDescription(`Ya reclamaste tu recompensa semanal.\nPodrás reclamar la siguiente en **${hoursLeft}h ${minutesLeft}m**`)
-            .setColor('#ff4444')
-            .setThumbnail(message.author.displayAvatarURL())
-            .setTimestamp();
-
-          return message.reply({ embeds: [embed] });
-        }
-
-        const baseReward = Math.floor(Math.random() * 10001) + 5000;
-        const bonus = Math.floor(Math.random() * 5001);
-        const totalReward = baseReward + bonus;
-
-        if (row) {
-          client.config.economyDb.run(
+          economyDb.run(
             `UPDATE economy SET wallet = wallet + ?, last_weekly = ? WHERE user_id = ?`,
             [totalReward, now.toISOString(), userId]
           );
         } else {
-          client.config.economyDb.run(
+          economyDb.run(
             `INSERT INTO economy (user_id, wallet, last_weekly) VALUES (?, ?, ?)`,
             [userId, totalReward, now.toISOString()]
           );
@@ -134,16 +79,17 @@ module.exports = {
           .setTitle('📅 Recompensa Semanal Reclamada')
           .setDescription(`¡Has recibido tu recompensa semanal!`)
           .addFields(
-            { name: '💰 Recompensa Base', value: `**${baseReward.toLocaleString()}** monedas`, inline: true },
-            { name: '🎁 Bonus', value: `**${bonus.toLocaleString()}** monedas`, inline: true },
-            { name: '🏆 Total Recibido', value: `**${totalReward.toLocaleString()}** monedas`, inline: false }
+            { name: '💰 Base', value: `**${baseReward.toLocaleString()}** monedas`, inline: true },
+            { name: '🎁 Bonus rol', value: `**${bonusExtra.toLocaleString()}** monedas`, inline: true },
+            { name: '🍀 Bonus random', value: `**${bonusRandom.toLocaleString()}** monedas`, inline: true },
+            { name: '🏆 Total', value: `**${totalReward.toLocaleString()}** monedas`, inline: false }
           )
           .setColor('#00ff88')
-          .setThumbnail(message.author.displayAvatarURL())
-          .setFooter({ text: 'Vuelve en 7 días para tu siguiente recompensa' })
+          .setThumbnail(interaction.user.displayAvatarURL())
+          .setFooter({ text: 'Vuelve en 7 días para más monedas 🤑' })
           .setTimestamp();
 
-        await message.reply({ embeds: [embed] });
+        await interaction.reply({ embeds: [embed] });
       }
     );
   }

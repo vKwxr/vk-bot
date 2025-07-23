@@ -48,7 +48,6 @@ module.exports = {
       const mes = interaction.options.getInteger('mes');
       const año = interaction.options.getInteger('año');
 
-      // Validar fecha
       const fecha = new Date(año || 2000, mes - 1, dia);
       if (fecha.getDate() !== dia || fecha.getMonth() !== mes - 1) {
         return interaction.reply({

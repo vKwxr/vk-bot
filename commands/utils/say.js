@@ -18,7 +18,6 @@ module.exports = {
         .setRequired(false)),
 
   async execute(interaction, client) {
-    // ✅ Obtener miembro completo para asegurar permisos
     const member = await interaction.guild.members.fetch(interaction.user.id);
 
     if (!member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {

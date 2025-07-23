@@ -43,17 +43,11 @@ module.exports = {
   async showMainHelp(context) {
     const embed = new EmbedBuilder()
       .setTitle('📚 Panel de Ayuda - vK')
-      .setDescription('¡Bienvenido al sistema de ayuda! Selecciona una categoría para ver los comandos disponibles.')
+      .setDescription('👋 ¡Bienvenido al **Panel de Ayuda de vK**!\n\nAquí encontrarás todas las funciones y comandos organizados por categorías.\n\n📂 Usa el **menú desplegable** de abajo para explorar cada sección y descubrir todo lo que el bot puede hacer.\n\n⚡ Desde utilidades, moderación, entretenimiento y mucho más…\n\n¡Elige una categoría y empieza a sacarle el máximo provecho a vK!')
       .addFields(
-        { name: '🛡️ Moderación', value: 'Comandos para moderar el servidor', inline: true },
-        { name: '🎮 Diversión', value: 'Comandos divertidos y entretenimiento', inline: true },
-        { name: '💰 Economía', value: 'Sistema económico del servidor', inline: true },
-        { name: '🔧 Utilidades', value: 'Herramientas útiles del servidor', inline: true },
-        { name: '📊 Información', value: 'Información del bot y servidor', inline: true },
-        { name: '🎯 Juegos', value: 'Juegos interactivos', inline: true }
       )
       .setColor('#0099ff')
-      .setFooter({ text: 'vK Bot • Usa el menú para navegar' })
+      .setFooter({ text: '• vK Bot' })
       .setTimestamp();
 
     const selectMenu = new StringSelectMenuBuilder()
@@ -124,7 +118,6 @@ module.exports = {
   { name: 'level', description: 'Ver tu nivel', usage: '`vk level` [@usuario]' },
   { name: 'rank', description: 'Ver ranking de niveles', usage: '`vk rank`' },
 
-  // Sorteos
   { name: 'giveaway', description: 'Iniciar un nuevo sorteo', usage: '`/giveaway`' },
   { name: 'reroll', description: 'Elegir nuevos ganadores para un sorteo', usage: '`/reroll` <messageId>' },
   { name: 'edit', description: 'Editar un sorteo activo', usage: '`/edit` <messageId>' },
@@ -185,28 +178,25 @@ module.exports = {
 
     const buttons = new ActionRowBuilder();
 
-    // Botón anterior
     buttons.addComponents(
       new ButtonBuilder()
         .setCustomId(`help_prev_${categoria}_${currentPage}`)
-        .setLabel('◀️ Anterior')
+        .setLabel('◀◀')
         .setStyle(ButtonStyle.Primary)
         .setDisabled(currentPage === 0)
     );
 
-    // Botón inicio
     buttons.addComponents(
       new ButtonBuilder()
         .setCustomId('help_home')
-        .setLabel('🏠 Inicio')
+        .setLabel('🏠 ')
         .setStyle(ButtonStyle.Secondary)
     );
 
-    // Botón siguiente
     buttons.addComponents(
       new ButtonBuilder()
         .setCustomId(`help_next_${categoria}_${currentPage}`)
-        .setLabel('Siguiente ▶️')
+        .setLabel('▶▶')
         .setStyle(ButtonStyle.Primary)
         .setDisabled(currentPage === totalPages - 1)
     );

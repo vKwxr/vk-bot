@@ -36,7 +36,6 @@ module.exports = {
         .setRequired(false)),
 
   async execute(interaction, client) {
-    // Verificar permisos de administrador
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator)) {
       return interaction.reply({
         content: '❌ Solo los administradores pueden usar este comando.',
@@ -50,7 +49,6 @@ module.exports = {
     const colorOption = interaction.options.getString('color') || 'BLUE';
     const ping = interaction.options.getBoolean('ping') || false;
 
-    // Mapear colores
     const colores = {
       'RED': '#e74c3c',
       'GREEN': '#2ecc71',
@@ -70,7 +68,6 @@ module.exports = {
       })
       .setTimestamp();
 
-    // Agregar thumbnail del servidor si existe
     if (interaction.guild.iconURL()) {
       embed.setThumbnail(interaction.guild.iconURL());
     }

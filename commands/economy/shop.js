@@ -1,5 +1,4 @@
-
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -9,119 +8,102 @@ module.exports = {
   async execute(interaction, client) {
     const { economyDb } = client.config;
 
-    economyDb.all(
-      `SELECT * FROM shop_items ORDER BY category, price`,
-      [],
-      async (err, items) => {
-        if (err) {
-          return interaction.reply({
-            content: '❌ Error al cargar la tienda.',
-            ephemeral: true
-          });
+    economyDb.all(`SELECT * FROM shop_items ORDER BY category, price`, [], async (err, items) => {
+      if (err) {
+        return interaction.reply({
+          content: '❌ Hubo un error al cargar la tienda.',
+          ephemeral: true,
+        });
+      }
+
+      if (!items || items.length === 0) {
+        const defaultItems = [
+          ['VIP Role', 1000, 'Obtén el rol VIP por 30 días', '👑', 'roles', 10],
+          ['Color Personalizado', 750, 'Elige un color único para tu nombre', '🎨', 'roles', -1],
+          ['Boost Pack', 2000, 'Activa mejoras por una semana', '⚡', 'boosts', 5],
+          ['Lucky Box', 1200, 'Caja sorpresa con premios aleatorios', '🎁', 'items', 7],
+          ['Nickname Fancy', 650, 'Ponle estilo a tu nombre', '✨', 'custom', -1]
+        ];
+
+        for (const item of defaultItems) {
+          economyDb.run(
+            `INSERT INTO shop_items (name, price, description, emoji, category, stock) VALUES (?, ?, ?, ?, ?, ?)`,
+            item
+          );
         }
 
-        if (!items || items.length === 0) {
-          // Agregar items por defecto
-          const defaultItems = [
-            ['VIP Role', 1000, 'Rol VIP por 30 días', '⭐', 'roles', 10],
-            ['Custom Color', 500, 'Color personalizado', '🎨', 'roles', -1],
-            ['Boost Pack', 2000, 'Pack de potenciadores', '🚀', 'boosts', 5],
-            ['Lucky Box', 800, 'Caja misteriosa', '📦', 'items', -1]
-          ];
+        return interaction.reply({
+          content: '🏪 Tienda inicializada. Usa el comando nuevamente para ver los artículos.',
+          ephemeral: true,
+        });
+      }
 
-          for (const item of defaultItems) {
-            economyDb.run(
-              `INSERT INTO shop_items (name, price, description, emoji, category, stock) VALUES (?, ?, ?, ?, ?, ?)`,
-              item
-            );
-          }
+      const itemsPerPage = 5;
+      let page = 0;
+      const totalPages = Math.ceil(items.length / itemsPerPage);
 
-          return interaction.reply({
-            content: '🏪 Tienda inicializada. Usa el comando nuevamente para ver los artículos.',
-            ephemeral: true
-          });
-        }
-
+      const generateEmbed = (pageIndex) => {
         const embed = new EmbedBuilder()
-          .setTitle('🛍️ Tienda VK Community')
-          .setDescription('Usa `/buy` para comprar artículos')
-          .setColor('#9966ff')
+          .setTitle('🛒 VK Shop - Página ' + (pageIndex + 1) + '/' + totalPages)
+          .setDescription('Utiliza `/buy` seguido del nombre del artículo para comprar.')
+          .setColor('#a259ff')
+          .setThumbnail('https://cdn-icons-png.flaticon.com/512/2331/2331942.png')
+          .setFooter({ text: 'Sistema de economía vK • vkbot' })
           .setTimestamp();
 
-        const categories = {};
-        items.forEach(item => {
-          if (!categories[item.category]) {
-            categories[item.category] = [];
-          }
-          categories[item.category].push(item);
-        });
-
-        Object.keys(categories).forEach(category => {
-          const categoryItems = categories[category];
-          const itemList = categoryItems.map(item => {
-            const stock = item.stock === -1 ? '∞' : item.stock;
-            return `${item.emoji} **${item.name}** - ${item.price} monedas\n${item.description} (Stock: ${stock})`;
-          }).join('\n\n');
-
+        const currentItems = items.slice(pageIndex * itemsPerPage, (pageIndex + 1) * itemsPerPage);
+        currentItems.forEach(item => {
+          const stock = item.stock === -1 ? '∞' : item.stock;
           embed.addFields({
-            name: `📂 ${category.charAt(0).toUpperCase() + category.slice(1)}`,
-            value: itemList,
+            name: `${item.emoji} ${item.name} — \`${item.price.toLocaleString()} vK Coins\``,
+            value: `📝 ${item.description}\n📦 Stock: ${stock}`,
             inline: false
           });
         });
 
-        await interaction.reply({ embeds: [embed] });
-      }
-    );
-  },
+        return embed;
+      };
 
-  name: 'shop',
-  async run(message, args, client) {
-    // Similar implementation for prefix command
-    const { economyDb } = client.config;
+      const getButtons = (pageIndex) => new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId('prev_page')
+          .setLabel('◀️ Anterior')
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(pageIndex === 0),
 
-    economyDb.all(
-      `SELECT * FROM shop_items ORDER BY category, price`,
-      [],
-      async (err, items) => {
-        if (err) {
-          return message.reply('❌ Error al cargar la tienda.');
-        }
+        new ButtonBuilder()
+          .setCustomId('next_page')
+          .setLabel('Siguiente ▶️')
+          .setStyle(ButtonStyle.Primary)
+          .setDisabled(pageIndex === totalPages - 1)
+      );
 
-        if (!items || items.length === 0) {
-          return message.reply('🏪 La tienda está vacía.');
-        }
+      const message = await interaction.reply({
+        embeds: [generateEmbed(page)],
+        components: [getButtons(page)],
+        fetchReply: true
+      });
 
-        const embed = new EmbedBuilder()
-          .setTitle('🛍️ Tienda VK Community')
-          .setDescription('Usa `vkbuy` para comprar artículos')
-          .setColor('#9966ff')
-          .setTimestamp();
+      const collector = message.createMessageComponentCollector({
+        filter: i => i.user.id === interaction.user.id,
+        time: 60000
+      });
 
-        const categories = {};
-        items.forEach(item => {
-          if (!categories[item.category]) {
-            categories[item.category] = [];
-          }
-          categories[item.category].push(item);
+      collector.on('collect', async i => {
+        if (i.customId === 'prev_page' && page > 0) page--;
+        else if (i.customId === 'next_page' && page < totalPages - 1) page++;
+
+        await i.update({
+          embeds: [generateEmbed(page)],
+          components: [getButtons(page)]
         });
+      });
 
-        Object.keys(categories).forEach(category => {
-          const categoryItems = categories[category];
-          const itemList = categoryItems.map(item => {
-            const stock = item.stock === -1 ? '∞' : item.stock;
-            return `${item.emoji} **${item.name}** - ${item.price} monedas\n${item.description} (Stock: ${stock})`;
-          }).join('\n\n');
-
-          embed.addFields({
-            name: `📂 ${category.charAt(0).toUpperCase() + category.slice(1)}`,
-            value: itemList,
-            inline: false
-          });
-        });
-
-        await message.reply({ embeds: [embed] });
-      }
-    );
+      collector.on('end', async () => {
+        if (message.editable) {
+          await message.edit({ components: [] });
+        }
+      });
+    });
   }
 };

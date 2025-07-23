@@ -1,4 +1,3 @@
-// Carga variables de entorno
 require("dotenv").config();
 
 const fs = require('fs');
@@ -11,10 +10,8 @@ const {
   Routes,
 } = require("discord.js");
 
-// Inicializar base de datos
 const sqlite3 = require("sqlite3").verbose();
 
-// Base de datos principales
 const db = new sqlite3.Database("./moderacion.sqlite", (err) => {
   if (err) console.error("❌ Error al conectar con la base de datos:", err);
   else console.log("📦 Base de datos conectada correctamente.");
@@ -40,7 +37,6 @@ const sorteosDb = new sqlite3.Database("./sorteos.sqlite", (err) => {
   else console.log("🎉 Base de datos de sorteos conectada.");
 });
 
-// Crear tablas necesarias
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS warnings (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -192,19 +188,17 @@ const client = new Client({
   ],
 });
 
-// Colecciones para comandos
 client.commands = new Collection();
 client.slashCommands = new Collection();
 
 const prefix = "vk";
 
-// Configuración global
 client.config = {
   prefix,
   STAFF_ROLE_ID: "1394028954079461487",
   ADMIN_ROLE_ID: "1394028954079461488",
-  TICKETS_CATEGORY_ID: "1394028954527989935",
   TICKETS_LOGS_CHANNEL_ID: "1394028954527989939",
+  LOGS_CHANNEL_ID: "1394028954527989939",
   GIPHY_API_KEY: "Hl1zxEofHCK03N5a4u7LLXhxVfemKWEY",
   db,
   ticketsDb,
@@ -213,7 +207,6 @@ client.config = {
   sorteosDb,
 };
 
-// Cargar comandos dinámicamente
 function loadCommands() {
   const commandsPath = path.join(__dirname, 'commands');
   const commandFolders = fs.readdirSync(commandsPath);
@@ -243,7 +236,6 @@ function loadCommands() {
   }
 }
 
-// Cargar eventos
 function loadEvents() {
   const eventsPath = path.join(__dirname, 'events');
   if (fs.existsSync(eventsPath)) {
@@ -266,7 +258,6 @@ function loadEvents() {
   }
 }
 
-// Registrar comandos slash
 async function deployCommands() {
   const commands = [];
   client.slashCommands.forEach(command => {
@@ -278,15 +269,13 @@ async function deployCommands() {
   try {
     console.log(`🔄 Registrando ${commands.length} comandos slash...`);
 
-    // Obtener comandos existentes primero
     const existingCommands = await rest.get(Routes.applicationCommands(process.env.CLIENT_ID));
 
-    // Registrar comandos uno por uno para evitar el error de Entry Point
     for (const command of commands) {
       try {
         await rest.post(Routes.applicationCommands(process.env.CLIENT_ID), { body: command });
       } catch (cmdError) {
-        if (cmdError.code !== 50035) { // Ignorar duplicados
+        if (cmdError.code !== 50035) { 
           console.error(`❌ Error registrando comando ${command.name}:`, cmdError.message);
         }
       }
@@ -297,15 +286,12 @@ async function deployCommands() {
     console.error('❌ Error registrando comandos:', error.message);
   }
 }
-// Incluir generador de conocimiento de la IA
 require('./generateKnowledge.js'); 
 
-// Cargar todo
 loadCommands();
 loadEvents();
 
 
-// Inicializar items por defecto de la tienda
 setTimeout(() => {
   try {
     const shopManager = require('./commands/admin/shopmanager.js');
@@ -317,7 +303,6 @@ setTimeout(() => {
   }
 }, 2000);
 
-// Manejar interacciones
 client.on('interactionCreate', async interaction => {
   if (interaction.isChatInputCommand()) {
     const command = client.slashCommands.get(interaction.commandName);
@@ -336,7 +321,6 @@ client.on('interactionCreate', async interaction => {
       }
     }
   } else if (interaction.isButton() || interaction.isStringSelectMenu()) {
-    // Manejar botones y select menus
     const handlerFile = path.join(__dirname, 'handlers', `${interaction.customId.split('_')[0]}.js`);
     if (fs.existsSync(handlerFile)) {
       try {
@@ -349,7 +333,6 @@ client.on('interactionCreate', async interaction => {
   }
 });
 
-// Manejar comandos con prefix
 client.on('messageCreate', async message => {
   if (message.author.bot || !message.guild || !message.content.startsWith(prefix)) return;
 
@@ -371,12 +354,9 @@ client.once('ready', async () => {
   console.log(`🤖 ${client.user.tag} está conectado!`);
   await deployCommands();
 
-  // Actualizar la presencia del bot
-  client.user.setPresence("Playing Solo", { type: "PLAYING" });
+client.user.setActivity('vK Help | La Romana', { type: 0 });
 });
 
-// Iniciar bot
 client.login(process.env.DISCORD_TOKEN);
 
-// Iniciar servidor web
 require("./server.js");

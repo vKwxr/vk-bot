@@ -1,41 +1,42 @@
-
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('ping')
-    .setDescription('🏓 Muestra la latencia del bot'),
+    .setDescription('📡 Muestra la latencia del bot'),
 
   async execute(interaction, client) {
-    const sent = await interaction.reply({ content: 'Calculando ping...', fetchReply: true });
+    const sent = await interaction.reply({ content: '⏳ Calculando ping...', fetchReply: true });
     const timeDiff = sent.createdTimestamp - interaction.createdTimestamp;
-    
-    const embed = new EmbedBuilder()
-      .setTitle('🏓 Pong!')
-      .setColor('#9966ff')
-      .addFields(
-        { name: '📡 Latencia del Bot', value: `${timeDiff}ms`, inline: true },
-        { name: '💓 Latencia de la API', value: `${Math.round(client.ws.ping)}ms`, inline: true }
-      )
-      .setTimestamp();
+    const apiPing = Math.round(client.ws.ping);
 
-    await interaction.editReply({ content: null, embeds: [embed] });
+    const response = `
+\`\`\`ansi
+[1;30m╭────────────── Ping del Bot ───────────────╮
+[1;30m│ [1;37m📡 Latencia del Bot:     [1;32m${timeDiff}ms[1;30m              │
+[1;30m│ [1;37m💓 Latencia de la API:    [1;36m${apiPing}ms[1;30m              │
+[1;30m╰───────────────────────────────────────────╯
+\`\`\`
+    `.trim();
+
+    await interaction.editReply({ content: response });
   },
 
   name: 'ping',
   async run(message, args, client) {
-    const sent = await message.reply('Calculando ping...');
+    const sent = await message.reply('⏳ Calculando ping...');
     const timeDiff = sent.createdTimestamp - message.createdTimestamp;
-    
-    const embed = new EmbedBuilder()
-      .setTitle('🏓 Pong!')
-      .setColor('#9966ff')
-      .addFields(
-        { name: '📡 Latencia del Bot', value: `${timeDiff}ms`, inline: true },
-        { name: '💓 Latencia de la API', value: `${Math.round(client.ws.ping)}ms`, inline: true }
-      )
-      .setTimestamp();
+    const apiPing = Math.round(client.ws.ping);
 
-    await sent.edit({ content: null, embeds: [embed] });
+    const response = `
+\`\`\`ansi
+[1;30m╭────────────── Ping del Bot ───────────────╮
+[1;30m│ [1;37m📡 Latencia del Bot:     [1;32m${timeDiff}ms[1;30m              │
+[1;30m│ [1;37m💓 Latencia de la API:    [1;36m${apiPing}ms[1;30m              │
+[1;30m╰───────────────────────────────────────────╯
+\`\`\`
+    `.trim();
+
+    await sent.edit({ content: response });
   }
 };

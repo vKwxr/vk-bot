@@ -1,18 +1,4 @@
-
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-
-const trabajos = [
-  { nombre: 'Programador', minSalario: 800, maxSalario: 2000, emoji: '💻' },
-  { nombre: 'Médico', minSalario: 900, maxSalario: 2200, emoji: '👨‍⚕️' },
-  { nombre: 'Chef', minSalario: 600, maxSalario: 1500, emoji: '👨‍🍳' },
-  { nombre: 'Artista', minSalario: 400, maxSalario: 1800, emoji: '🎨' },
-  { nombre: 'Mecánico', minSalario: 500, maxSalario: 1200, emoji: '🔧' },
-  { nombre: 'Profesor', minSalario: 600, maxSalario: 1400, emoji: '👨‍🏫' },
-  { nombre: 'Policía', minSalario: 700, maxSalario: 1600, emoji: '👮‍♂️' },
-  { nombre: 'Bombero', minSalario: 650, maxSalario: 1550, emoji: '👨‍🚒' },
-  { nombre: 'Piloto', minSalario: 1000, maxSalario: 2500, emoji: '👨‍✈️' },
-  { nombre: 'Dentista', minSalario: 800, maxSalario: 1900, emoji: '🦷' }
-];
 
 const situaciones = [
   'trabajaste duro todo el día',
@@ -27,6 +13,19 @@ const situaciones = [
   'recibiste una bonificación'
 ];
 
+const trabajos = {
+  Programador: { min: 800, max: 2000, emoji: '💻' },
+  Médico: { min: 900, max: 2200, emoji: '👨‍⚕️' },
+  Chef: { min: 600, max: 1500, emoji: '👨‍🍳' },
+  Artista: { min: 400, max: 1800, emoji: '🎨' },
+  Mecánico: { min: 500, max: 1200, emoji: '🔧' },
+  Profesor: { min: 600, max: 1400, emoji: '👨‍🏫' },
+  Policía: { min: 700, max: 1600, emoji: '👮‍♂️' },
+  Bombero: { min: 650, max: 1550, emoji: '👨‍🚒' },
+  Piloto: { min: 1000, max: 2500, emoji: '👨‍✈️' },
+  Dentista: { min: 800, max: 1900, emoji: '🦷' }
+};
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName('work')
@@ -35,133 +34,69 @@ module.exports = {
   async execute(interaction, client) {
     const userId = interaction.user.id;
 
-    client.config.economyDb.get(
-      `SELECT * FROM economy WHERE user_id = ?`,
-      [userId],
-      async (err, row) => {
-        if (err) {
-          console.error(err);
-          return interaction.reply({
-            content: '❌ Error al acceder a la base de datos.',
-            ephemeral: true
-          });
-        }
-
-        const now = new Date();
-        const lastWork = row ? new Date(row.last_work) : null;
-
-        // Verificar cooldown de 2 horas
-        if (lastWork && (now - lastWork) < 2 * 60 * 60 * 1000) {
-          const timeLeft = 2 * 60 * 60 * 1000 - (now - lastWork);
-          const minutesLeft = Math.floor(timeLeft / (1000 * 60));
-
-          const embed = new EmbedBuilder()
-            .setTitle('⏰ Aún estás cansado')
-            .setDescription(`Debes descansar antes de volver a trabajar.\nPodrás trabajar de nuevo en **${minutesLeft} minutos**`)
-            .setColor('#ff4444')
-            .setThumbnail(interaction.user.displayAvatarURL())
-            .setTimestamp();
-
-          return interaction.reply({ embeds: [embed] });
-        }
-
-        // Seleccionar trabajo y situación aleatorios
-        const trabajo = trabajos[Math.floor(Math.random() * trabajos.length)];
-        const situacion = situaciones[Math.floor(Math.random() * situaciones.length)];
-        
-        // Calcular salario
-        const salario = Math.floor(Math.random() * (trabajo.maxSalario - trabajo.minSalario + 1)) + trabajo.minSalario;
-
-        // Actualizar base de datos
-        if (row) {
-          client.config.economyDb.run(
-            `UPDATE economy SET wallet = wallet + ?, last_work = ? WHERE user_id = ?`,
-            [salario, now.toISOString(), userId]
-          );
-        } else {
-          client.config.economyDb.run(
-            `INSERT INTO economy (user_id, wallet, last_work) VALUES (?, ?, ?)`,
-            [userId, salario, now.toISOString()]
-          );
-        }
-
-        const embed = new EmbedBuilder()
-          .setTitle('💼 Trabajo Completado')
-          .setDescription(`${trabajo.emoji} Como **${trabajo.nombre}**, ${situacion} y ganaste **${salario.toLocaleString()}** monedas`)
-          .addFields(
-            { name: '💰 Salario Ganado', value: `**${salario.toLocaleString()}** monedas`, inline: true },
-            { name: '⏰ Próximo Trabajo', value: 'En 2 horas', inline: true }
-          )
-          .setColor('#00ff88')
-          .setThumbnail(interaction.user.displayAvatarURL())
-          .setFooter({ text: 'Sigue trabajando para ganar más dinero' })
-          .setTimestamp();
-
-        await interaction.reply({ embeds: [embed] });
+    client.config.economyDb.get(`SELECT * FROM economy WHERE user_id = ?`, [userId], async (err, row) => {
+      if (err) {
+        console.error(err);
+        return interaction.reply({ content: '❌ Error al acceder a la base de datos.', ephemeral: true });
       }
-    );
-  },
 
-  name: 'work',
-  async run(message, args, client) {
-    const userId = message.author.id;
-
-    client.config.economyDb.get(
-      `SELECT * FROM economy WHERE user_id = ?`,
-      [userId],
-      async (err, row) => {
-        if (err) {
-          console.error(err);
-          return message.reply('❌ Error al acceder a la base de datos.');
-        }
-
-        const now = new Date();
-        const lastWork = row ? new Date(row.last_work) : null;
-
-        if (lastWork && (now - lastWork) < 2 * 60 * 60 * 1000) {
-          const timeLeft = 2 * 60 * 60 * 1000 - (now - lastWork);
-          const minutesLeft = Math.floor(timeLeft / (1000 * 60));
-
-          const embed = new EmbedBuilder()
-            .setTitle('⏰ Aún estás cansado')
-            .setDescription(`Debes descansar antes de volver a trabajar.\nPodrás trabajar de nuevo en **${minutesLeft} minutos**`)
-            .setColor('#ff4444')
-            .setThumbnail(message.author.displayAvatarURL())
-            .setTimestamp();
-
-          return message.reply({ embeds: [embed] });
-        }
-
-        const trabajo = trabajos[Math.floor(Math.random() * trabajos.length)];
-        const situacion = situaciones[Math.floor(Math.random() * situaciones.length)];
-        const salario = Math.floor(Math.random() * (trabajo.maxSalario - trabajo.minSalario + 1)) + trabajo.minSalario;
-
-        if (row) {
-          client.config.economyDb.run(
-            `UPDATE economy SET wallet = wallet + ?, last_work = ? WHERE user_id = ?`,
-            [salario, now.toISOString(), userId]
-          );
-        } else {
-          client.config.economyDb.run(
-            `INSERT INTO economy (user_id, wallet, last_work) VALUES (?, ?, ?)`,
-            [userId, salario, now.toISOString()]
-          );
-        }
-
-        const embed = new EmbedBuilder()
-          .setTitle('💼 Trabajo Completado')
-          .setDescription(`${trabajo.emoji} Como **${trabajo.nombre}**, ${situacion} y ganaste **${salario.toLocaleString()}** monedas`)
-          .addFields(
-            { name: '💰 Salario Ganado', value: `**${salario.toLocaleString()}** monedas`, inline: true },
-            { name: '⏰ Próximo Trabajo', value: 'En 2 horas', inline: true }
-          )
-          .setColor('#00ff88')
-          .setThumbnail(message.author.displayAvatarURL())
-          .setFooter({ text: 'Sigue trabajando para ganar más dinero' })
-          .setTimestamp();
-
-        await message.reply({ embeds: [embed] });
+      // 🛑 Verifica si el usuario tiene un trabajo
+      if (!row || !row.job || !trabajos[row.job]) {
+        return interaction.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle('🚫 No tienes trabajo')
+              .setDescription('Debes elegir un trabajo primero usando `/job`.')
+              .setColor('#ff4444')
+          ],
+          ephemeral: true
+        });
       }
-    );
+
+      const now = new Date();
+      const lastWork = row.last_work ? new Date(row.last_work) : null;
+
+      // ⏱️ Cooldown de 2 horas
+      if (lastWork && (now - lastWork) < 2 * 60 * 60 * 1000) {
+        const timeLeft = 2 * 60 * 60 * 1000 - (now - lastWork);
+        const minutesLeft = Math.floor(timeLeft / (1000 * 60));
+
+        return interaction.reply({
+          embeds: [
+            new EmbedBuilder()
+              .setTitle('⏰ Aún estás cansado')
+              .setDescription(`Debes descansar antes de volver a trabajar.\nPodrás trabajar de nuevo en **${minutesLeft} minutos**`)
+              .setColor('#ff4444')
+              .setThumbnail(interaction.user.displayAvatarURL())
+              .setTimestamp()
+          ]
+        });
+      }
+
+      const job = row.job;
+      const { min, max, emoji } = trabajos[job];
+      const situacion = situaciones[Math.floor(Math.random() * situaciones.length)];
+      const salario = Math.floor(Math.random() * (max - min + 1)) + min;
+
+      // 💾 Actualizar salario y hora
+      client.config.economyDb.run(
+        `UPDATE economy SET wallet = wallet + ?, last_work = ? WHERE user_id = ?`,
+        [salario, now.toISOString(), userId]
+      );
+
+      const embed = new EmbedBuilder()
+        .setTitle('💼 Trabajo Completado')
+        .setDescription(`${emoji} Como **${job}**, ${situacion} y ganaste **${salario.toLocaleString()}** monedas`)
+        .addFields(
+          { name: '💰 Salario Ganado', value: `**${salario.toLocaleString()}** monedas`, inline: true },
+          { name: '⏰ Próximo Trabajo', value: 'En 2 horas', inline: true }
+        )
+        .setColor('#00ff88')
+        .setThumbnail(interaction.user.displayAvatarURL())
+        .setFooter({ text: 'Sigue trabajando para ganar más dinero' })
+        .setTimestamp();
+
+      return interaction.reply({ embeds: [embed] });
+    });
   }
 };

@@ -43,12 +43,10 @@ module.exports = {
     const isInteraction = context.replied !== undefined;
     const { economyDb, ADMIN_ROLE_ID } = client.config;
 
-    // Verificar si es administrador (gratis para admins)
     const member = isInteraction ? context.member : context.member;
     const isAdmin = member.roles.cache.has(ADMIN_ROLE_ID);
 
     if (!isAdmin) {
-      // Verificar si el usuario compró el permiso en la tienda
       economyDb.get(
         `SELECT ui.* FROM user_inventory ui 
          JOIN shop_items si ON ui.item_id = si.id 
@@ -77,7 +75,7 @@ module.exports = {
                 { name: '📝 Cómo Comprar', value: '`/buy Crear Rol Personalizado`', inline: false }
               )
               .setColor('#ffaa00')
-              .setFooter({ text: 'VK Community • Sistema de Tienda' })
+              .setFooter({ text: 'vK • Sistema de Tienda' })
               .setTimestamp();
 
             return isInteraction 
@@ -85,12 +83,10 @@ module.exports = {
               : await context.reply({ embeds: [noPermissionEmbed] });
           }
 
-          // El usuario sí compró el permiso, continuar con la creación del rol
           await this.createCustomRole(context, user, nombre, color, separado, client);
         }
       );
     } else {
-      // Es admin, crear rol directamente
       await this.createCustomRole(context, user, nombre, color, separado, client);
     }
   },
@@ -99,7 +95,6 @@ module.exports = {
     const isInteraction = context.replied !== undefined;
     
     try {
-      // Validar color
       if (!color.match(/^#[0-9A-F]{6}$/i)) {
         const invalidColorEmbed = new EmbedBuilder()
           .setTitle('❌ Color Inválido')
@@ -114,7 +109,6 @@ module.exports = {
           : await context.reply({ embeds: [invalidColorEmbed] });
       }
 
-      // Crear el rol
       const guild = isInteraction ? context.guild : context.guild;
       const role = await guild.roles.create({
         name: nombre,
@@ -124,11 +118,9 @@ module.exports = {
         permissions: []
       });
 
-      // Asignar el rol al usuario
       const member = isInteraction ? context.member : context.member;
       await member.roles.add(role);
 
-      // Respuesta exitosa
       const successEmbed = new EmbedBuilder()
         .setTitle('🎨 ¡Rol Creado Exitosamente!')
         .setDescription(`Tu rol personalizado **${nombre}** ha sido creado y asignado.`)
@@ -141,7 +133,7 @@ module.exports = {
           { name: '⏰ Fecha de Creación', value: `<t:${Math.floor(Date.now()/1000)}:F>`, inline: true }
         )
         .setColor(color)
-        .setFooter({ text: 'VK Community • Roles Personalizados' })
+        .setFooter({ text: 'vK • Roles Personalizados' })
         .setTimestamp();
 
       return isInteraction 
