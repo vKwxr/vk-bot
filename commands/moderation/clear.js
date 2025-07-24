@@ -1,3 +1,4 @@
+const path = require('path');
 
 const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField } = require('discord.js');
 
@@ -17,7 +18,6 @@ module.exports = {
         .setRequired(false)),
 
   async execute(interaction, client) {
-    // Verificar permisos
     if (!interaction.member.permissions.has(PermissionsBitField.Flags.ManageMessages)) {
       return interaction.reply({
         content: '❌ No tienes permisos para gestionar mensajes.',
@@ -33,11 +33,9 @@ module.exports = {
 
       let mensajes;
       if (usuario) {
-        // Obtener mensajes del usuario específico
         const allMessages = await interaction.channel.messages.fetch({ limit: 100 });
         mensajes = allMessages.filter(msg => msg.author.id === usuario.id).first(cantidad);
       } else {
-        // Obtener mensajes normalmente
         mensajes = await interaction.channel.messages.fetch({ limit: cantidad });
       }
 
@@ -45,7 +43,6 @@ module.exports = {
         return interaction.editReply('❌ No se encontraron mensajes para eliminar.');
       }
 
-      // Eliminar mensajes
       const deletedMessages = await interaction.channel.bulkDelete(mensajes, true);
 
       const embed = new EmbedBuilder()

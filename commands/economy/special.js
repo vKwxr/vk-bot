@@ -1,8 +1,17 @@
+const path = require("path");
 const { SlashCommandBuilder } = require('discord.js');
 const cooldowns = new Map();
 const ms = require('ms');
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./economy.sqlite');
+
+const dbPath = path.join(__dirname, '../../economy.sqlite');
+
+const economyDb = new sqlite3.Database(dbPath, (err) => {
+  if (err) return console.error('❌ Error al conectar con economy.sqlite:', err.message);
+  console.log('✅ Conectado correctamente a economy.sqlite');
+});
+
+
 
 const COOLDOWN_TIME = ms('3d'); // 3 días
 

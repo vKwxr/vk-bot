@@ -1,6 +1,7 @@
+const path = require("path");
 const { SlashCommandBuilder, PermissionFlagsBits } = require("discord.js");
 const sqlite3 = require("sqlite3").verbose();
-const path = require("path");
+
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -31,7 +32,7 @@ module.exports = {
         return interaction.reply({ content: "❌ El canal debe ser una categoría.", ephemeral: true });
       }
 
-      const db = new sqlite3.Database(path.join(__dirname, "../../tickets.sqlite"));
+      const db = new sqlite3.Database(path.join(__dirname, path.join(__dirname, "../../tickets.sqlite")));
 
       db.run(
         `INSERT INTO ticket_configs (guild_id, staff_role_id, category_id)

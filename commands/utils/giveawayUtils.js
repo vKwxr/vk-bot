@@ -1,8 +1,7 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 
-const dbPath = path.join(__dirname, '../sorteos.sqlite');
-const db = new sqlite3.Database(dbPath);
+const dbPath = path.join(__dirname, '..', 'sorteos.sqlite');
 
 function getGiveawayData(messageId) {
   return new Promise((resolve, reject) => {

@@ -1,3 +1,4 @@
+const path = require('path');
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 module.exports = {
@@ -29,7 +30,6 @@ module.exports = {
     const isInteraction = context.replied !== undefined;
 
     try {
-      // Obtener datos del usuario
       const userData = await new Promise((resolve, reject) => {
         levelsDb.get('SELECT * FROM levels WHERE user_id = ?', [targetUser.id], (err, row) => {
           if (err) reject(err);
@@ -42,10 +42,8 @@ module.exports = {
       const xpProgress = xp % 1000;
       const progressPercentage = Math.floor((xpProgress / xpNeeded) * 100);
 
-      // Crear barra de progreso con emojis
       const progressBar = this.createProgressBar(progressPercentage);
 
-      // Obtener posición en ranking
       const rankPosition = await new Promise((resolve) => {
         levelsDb.all('SELECT user_id, level, xp FROM levels ORDER BY level DESC, xp DESC', [], (err, rows) => {
           if (err) resolve('N/A');
@@ -95,11 +93,11 @@ module.exports = {
   },
 
   getLevelColor(level) {
-    if (level >= 50) return '#ff0000'; // Rojo para niveles muy altos
-    if (level >= 30) return '#ff6600'; // Naranja para niveles altos
-    if (level >= 20) return '#ffaa00'; // Amarillo para niveles medios-altos
-    if (level >= 10) return '#00ff00'; // Verde para niveles medios
-    if (level >= 5) return '#0099ff';  // Azul para niveles bajos-medios
-    return '#9966ff'; // Morado para niveles bajos
+    if (level >= 50) return '#ff0000'; 
+    if (level >= 30) return '#ff6600'; 
+    if (level >= 20) return '#ffaa00'; 
+    if (level >= 10) return '#00ff00'; 
+    if (level >= 5) return '#0099ff';  
+    return '#9966ff'; 
   }
 };

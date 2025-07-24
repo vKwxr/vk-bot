@@ -1,12 +1,44 @@
-// ✅ Código actualizado con mejoras para persistencia, patrocinador, lista de participantes y embed estético
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionsBitField } = require('discord.js');
 const { v4: uuidv4 } = require('uuid');
 const fs = require('fs');
 const path = require('path');
-
-const dbPath = path.join(__dirname, '../../data/sorteos.sqlite');
 const Database = require('better-sqlite3');
-const sorteosDb = new Database(dbPath);
+
+const dbPath = path.join(__dirname, '../../sorteos.sqlite');
+
+let sorteosDb;
+try {
+  sorteosDb = new Database(dbPath);
+  console.log('Conexión a la base de datos establecida correctamente.');
+} catch (error) {
+  console.error('Error al conectar con la base de datos:', error);
+  return; 
+}
+
+
+const createTable = `
+  CREATE TABLE IF NOT EXISTS sorteos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    message_id TEXT NOT NULL,
+    canal_id TEXT NOT NULL,
+    titulo TEXT NOT NULL,
+    premio TEXT NOT NULL,
+    ganadores INTEGER NOT NULL,
+    finaliza INTEGER NOT NULL,
+    rol_requerido TEXT,
+    imagen TEXT,
+    participantes TEXT,
+    patrocinador_id TEXT NOT NULL,
+    min_invites INTEGER,
+    activo INTEGER
+  );
+`;
+
+try {
+  sorteosDb.prepare(createTable).run();
+} catch (error) {
+  console.error("Error al crear la tabla:", error);
+}
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -49,14 +81,21 @@ module.exports = {
     const mencionarEveryone = interaction.options.getBoolean('mencionar_everyone') ?? false;
     const patrocinador = interaction.options.getUser('patrocinador');
 
-    const timeMatch = duracion.match(/^([0-9]+)([hd])$/);
+   const timeMatch = duracion.match(/^(\d+)([mhd])$/); // acepta m, h y d
     if (!timeMatch) {
-      return interaction.reply({ content: '❌ Formato de duración inválido. Usa `2h` o `1d`.', ephemeral: true });
-    }
+    return interaction.reply({ content: '❌ Formato de duración inválido. Usa `10m`, `2h` o `1d`.', ephemeral: true });
+}
 
-    const [, tiempo, unidad] = timeMatch;
-    const ms = unidad === 'h' ? parseInt(tiempo) * 3600000 : parseInt(tiempo) * 86400000;
-    const finaliza = Date.now() + ms;
+  const [, tiempo, unidad] = timeMatch;
+  let ms;
+  switch (unidad) {
+  case 'm': ms = parseInt(tiempo) * 60000; break;
+  case 'h': ms = parseInt(tiempo) * 3600000; break;
+  case 'd': ms = parseInt(tiempo) * 86400000; break;
+}
+
+const finaliza = Date.now() + ms;
+
 
     const embed = new EmbedBuilder()
       .setTitle(`🎉 ${titulo}`)

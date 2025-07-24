@@ -1,3 +1,4 @@
+const path = require('path');
 const LINK_REGEX = /(https?:\/\/[^\s]+)/gi;
 
 const BLACKLISTED_KEYWORDS = [

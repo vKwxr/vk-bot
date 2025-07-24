@@ -1,3 +1,4 @@
+const path = require('path');
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ComponentType } = require('discord.js');
 
 const commandsData = [

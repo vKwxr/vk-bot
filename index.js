@@ -12,30 +12,33 @@ const {
 
 const sqlite3 = require("sqlite3").verbose();
 
-const db = new sqlite3.Database("./moderacion.sqlite", (err) => {
+const dbPath = (file) => path.join(__dirname, '..', file);
+
+const db = new sqlite3.Database(dbPath("moderacion.sqlite"), (err) => {
   if (err) console.error("❌ Error al conectar con la base de datos:", err);
   else console.log("📦 Base de datos conectada correctamente.");
 });
 
-const ticketsDb = new sqlite3.Database("./tickets.sqlite", (err) => {
+const ticketsDb = new sqlite3.Database(dbPath("tickets.sqlite"), (err) => {
   if (err) console.error("❌ Error al conectar con la base de datos de tickets:", err);
   else console.log("🎫 Base de datos de tickets conectada correctamente.");
 });
 
-const levelsDb = new sqlite3.Database("./levels.sqlite", (err) => {
+const levelsDb = new sqlite3.Database(dbPath("levels.sqlite"), (err) => {
   if (err) console.error("❌ Error al conectar levels:", err);
   else console.log("🆙 Base de datos de niveles conectada.");
 });
 
-const economyDb = new sqlite3.Database("./economy.sqlite", (err) => {
+const economyDb = new sqlite3.Database(dbPath("economy.sqlite"), (err) => {
   if (err) console.error("❌ Error al conectar economía:", err);
   else console.log("💰 Base de datos de economía conectada.");
 });
 
-const sorteosDb = new sqlite3.Database("./sorteos.sqlite", (err) => {
+const sorteosDb = new sqlite3.Database(dbPath("sorteos.sqlite"), (err) => {
   if (err) console.error("❌ Error al conectar sorteos:", err);
   else console.log("🎉 Base de datos de sorteos conectada.");
 });
+
 
 db.serialize(() => {
   db.run(`CREATE TABLE IF NOT EXISTS warnings (
@@ -95,6 +98,14 @@ db.serialize(() => {
     confession TEXT,
     timestamp TEXT,
     anonymous INTEGER DEFAULT 1
+  )`);
+
+  // 🔥 NUEVA TABLA USERS
+  db.run(`CREATE TABLE IF NOT EXISTS users (
+    user_id TEXT PRIMARY KEY,
+    username TEXT,
+    joined_at TEXT,
+    server_id TEXT
   )`);
 });
 
@@ -209,7 +220,10 @@ client.config = {
 
 function loadCommands() {
   const commandsPath = path.join(__dirname, 'commands');
-  const commandFolders = fs.readdirSync(commandsPath);
+  const commandFolders = fs.readdirSync(commandsPath).filter(folder => {
+  return fs.statSync(path.join(commandsPath, folder)).isDirectory();
+});
+
 
   for (const folder of commandFolders) {
     const folderPath = path.join(commandsPath, folder);
@@ -286,15 +300,15 @@ async function deployCommands() {
     console.error('❌ Error registrando comandos:', error.message);
   }
 }
-require('./generateKnowledge.js'); 
+
+require(path.join(__dirname, 'generateKnowledge.js'));
 
 loadCommands();
 loadEvents();
 
-
 setTimeout(() => {
   try {
-    const shopManager = require('./commands/admin/shopmanager.js');
+    const shopManager = require(path.join("__dirname\\commands\\admin\\shopmanager.js"));
     if (shopManager.initializeDefaultItems) {
       shopManager.initializeDefaultItems(economyDb);
     }
@@ -353,10 +367,27 @@ client.on('messageCreate', async message => {
 client.once('ready', async () => {
   console.log(`🤖 ${client.user.tag} está conectado!`);
   await deployCommands();
+  client.user.setActivity('vK Help | La Romana', { type: 0 });
+});
 
-client.user.setActivity('vK Help | La Romana', { type: 0 });
+client.on('guildMemberAdd', (member) => {
+  const userId = member.user.id;
+  const username = member.user.username;
+  const joinedAt = new Date().toISOString();
+  const serverId = member.guild.id;
+
+  db.run(`
+    INSERT OR IGNORE INTO users (user_id, username, joined_at, server_id)
+    VALUES (?, ?, ?, ?)
+  `, [userId, username, joinedAt, serverId], (err) => {
+    if (err) {
+      console.error(`❌ Error registrando al usuario ${username} en users:`, err.message);
+    } else {
+      console.log(`✅ Usuario ${username} registrado en la tabla users.`);
+    }
+  });
 });
 
 client.login(process.env.DISCORD_TOKEN);
 
-require("./server.js");
+const server = require(path.join(__dirname, 'server.js'));

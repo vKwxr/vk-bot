@@ -1,5 +1,4 @@
-
-
+const path = require("path");
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionsBitField, ChannelType, AttachmentBuilder, StringSelectMenuBuilder, flatten } = require('discord.js');
 
 const TICKET_TYPES = [
@@ -15,8 +14,8 @@ const TICKET_TYPES = [
 module.exports = {
   async execute(interaction, client) {
     const sqlite3 = require("sqlite3").verbose();
-    const path = require("path");
-    const ticketsDb = new sqlite3.Database(path.join(__dirname, "../tickets.sqlite"));
+    
+    const ticketsDb = new sqlite3.Database(path.join(__dirname, path.join(__dirname, "../tickets.sqlite")));
     const guildId = interaction.guild.id;
     const userId = interaction.user.id;
 
@@ -397,7 +396,7 @@ module.exports = {
         }
 
         // Importar y usar la función handleBuy del comando buy
-        const buyCommand = require('../commands/economy/buy.js');
+        const buyCommand = require(path.join("commands\\economy\\buy.js"));
         await buyCommand.handleBuy(interaction, interaction.user, item.name, client);
       });
     }
@@ -493,4 +492,3 @@ async function closeTicket(channel, user, reason, ticketsDb, client) {
     console.error(error);
   }
 }
-

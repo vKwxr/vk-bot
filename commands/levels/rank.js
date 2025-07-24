@@ -1,3 +1,4 @@
+const path = require('path');
 const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
 const Canvas = require('@napi-rs/canvas');
 const fetch = require('node-fetch');

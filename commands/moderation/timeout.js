@@ -1,4 +1,5 @@
-const { SlashCommandBuilder, PermissionsBitField } = require('discord.js');
+const path = require('path');
+const { SlashCommandBuilder, PermissionsBitField, EmbedBuilder } = require('discord.js');
 
 function parseTime(timeString) {
   const match = timeString.match(/^(\d+)([smhd])$/);
@@ -71,10 +72,24 @@ module.exports = {
     try {
       await member.timeout(duration, reason);
 
+      const embedDM = new EmbedBuilder()
+        .setTitle('🔇 Has sido silenciado')
+        .setColor('#FF5E5E')
+        .addFields(
+          { name: '📋 Moderador', value: `${interaction.user.tag}`, inline: true },
+          { name: '⏳ Duración', value: `\`${timeString}\``, inline: true },
+          { name: '📝 Razón', value: reason }
+        )
+        .setTimestamp();
+
+      await user.send({ embeds: [embedDM] }).catch(() => null); // Ignora si tiene bloqueados los DMs
+
+      // Confirmación en el canal
       return interaction.reply({
-        content: `🔇 **${user.tag}** ha sido silenciado por **${interaction.user.tag}**\n⏰ Duración: \`${timeString}\`\n📝 Razón: ${reason}`,
+        content: `✅ **${user.tag}** ha sido silenciado.`,
         ephemeral: false
       });
+
     } catch (error) {
       return interaction.reply({
         content: '❌ Error al silenciar al usuario.',
@@ -84,6 +99,8 @@ module.exports = {
   },
 
   name: 'timeout',
+
+  // Versión clásica con prefijo
   async run(message, args, client, prefix) {
     if (!message.member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) {
       return message.reply('❌ No tienes permisos para silenciar usuarios.');
@@ -104,15 +121,24 @@ module.exports = {
     const member = message.guild.members.cache.get(user.id);
 
     if (!member) return message.reply('❌ Usuario no encontrado.');
-
-    if (member.id === message.guild.ownerId) {
-      return message.reply('❌ No puedes silenciar al propietario del servidor.');
-    }
+    if (member.id === message.guild.ownerId) return message.reply('❌ No puedes silenciar al propietario del servidor.');
 
     try {
       await member.timeout(duration, reason);
 
-      return message.channel.send(`🔇 **${user.tag}** ha sido silenciado por **${message.author.tag}**\n⏰ Duración: \`${timeString}\`\n📝 Razón: ${reason}`);
+      const embedDM = new EmbedBuilder()
+        .setTitle('🔇 Has sido silenciado')
+        .setColor('#FF5E5E')
+        .addFields(
+          { name: '📋 Moderador', value: `${message.author.tag}`, inline: true },
+          { name: '⏳ Duración', value: `\`${timeString}\``, inline: true },
+          { name: '📝 Razón', value: reason }
+        )
+        .setTimestamp();
+
+      await user.send({ embeds: [embedDM] }).catch(() => null);
+
+      return message.channel.send(`✅ **${user.tag}** ha sido silenciado.`);
     } catch (error) {
       return message.reply('❌ Error al silenciar al usuario.');
     }
@@ -123,26 +149,32 @@ module.exports = {
     if (message.author.bot) return;
 
     if (!message.member.permissions.has(PermissionsBitField.Flags.ModerateMembers)) return;
-
     if (!message.reference) return;
-
     if (!message.content.startsWith(prefix)) return;
 
     const repliedMessage = await message.channel.messages.fetch(message.reference.messageId).catch(() => null);
     if (!repliedMessage) return;
-
     if (repliedMessage.member?.permissions.has(PermissionsBitField.Flags.ModerateMembers)) return;
-
     if (repliedMessage.author.id === message.guild.ownerId) return;
 
-    const muteDuration = 10 * 60 * 1000; // 10 min
-    const reason = `Mute automático por responder con comando del staff ${message.author.tag}`;
+    const muteDuration = 10 * 60 * 1000;
+    const reason = `Mute automático por responder a un comando de staff ${message.author.tag}`;
 
     try {
       await repliedMessage.member.timeout(muteDuration, reason);
 
-      await message.channel.send(`🔇 **${repliedMessage.author.tag}** ha sido silenciado automáticamente por responder a un comando de staff.\n⏰ Duración: 10 minutos\n📝 Razón: ${reason}`);
-    } catch {
-    }
+      const embedDM = new EmbedBuilder()
+        .setTitle('🔇 Has sido silenciado')
+        .setColor('#FF5E5E')
+        .addFields(
+          { name: '⏳ Duración', value: `10 minutos`, inline: true },
+          { name: '📝 Razón', value: reason }
+        )
+        .setTimestamp();
+
+      await repliedMessage.author.send({ embeds: [embedDM] }).catch(() => null);
+
+      await message.channel.send(`✅ **${repliedMessage.author.tag}** ha sido silenciado automáticamente.`);
+    } catch { }
   }
 };

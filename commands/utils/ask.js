@@ -1,11 +1,10 @@
+const path = require('path');
 const { SlashCommandBuilder } = require('discord.js');
-const { Configuration, OpenAIApi } = require('openai');
+const OpenAI = require('openai');
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-const openai = new OpenAIApi(configuration);
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -27,8 +26,8 @@ module.exports = {
     if (!pregunta) return message.reply('❌ Debes hacer una pregunta.');
 
     try {
-      const respuesta = await openai.createChatCompletion({
-        model: 'gpt-4', // o 'gpt-3.5-turbo' si prefieres menos costo
+      const respuesta = await openai.chat.completions.create({
+        model: 'gpt-4', // O 'gpt-3.5-turbo' si prefieres menor costo
         messages: [
           {
             role: 'system',
@@ -40,7 +39,7 @@ module.exports = {
         max_tokens: 500,
       });
 
-      const contenido = respuesta.data.choices[0].message.content;
+      const contenido = respuesta.choices[0].message.content;
 
       return message.reply({ content: contenido });
     } catch (error) {

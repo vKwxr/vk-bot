@@ -1,3 +1,4 @@
+const path = require('path');
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 
 const situaciones = [

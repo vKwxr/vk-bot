@@ -1,6 +1,8 @@
+const path = require('path');
 const { EmbedBuilder, PermissionsBitField } = require('discord.js');
-const levelChannelCmd = require('../../commands/levels/levelchannel.js');
-const automod = require('./automod'); // IMPORTAR automod
+const levelChannelCmd = require("C:\\Users\\USUARIO\\Desktop\\vK Bot\\commands\\levels\\levelchannel.js");
+const automod = require(path.join(__dirname, '../automod'));
+
 
 function parseTime(timeString) {
   const match = timeString.match(/^(\d+)([smhd])$/);

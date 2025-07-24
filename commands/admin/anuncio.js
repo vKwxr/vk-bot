@@ -1,3 +1,4 @@
+const path = require('path');
 
 const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField, ChannelType } = require('discord.js');
 

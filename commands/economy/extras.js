@@ -1,6 +1,7 @@
+const path = require('path');
 // 📁 economy/extras.js
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, StringSelectMenuBuilder } = require('discord.js');
-const db = require('better-sqlite3')('./main.db');
+const db = require('better-sqlite3')(path.join(__dirname, "./main.db"));
 
 module.exports = [
   // ✅ /sell

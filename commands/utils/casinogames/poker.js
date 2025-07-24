@@ -1,3 +1,4 @@
+const path = require('path');
 // utils/casinoGames/poker.js
 const { EmbedBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder, ComponentType } = require('discord.js');
 

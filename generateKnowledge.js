@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const commandsPath = path.join(__dirname, 'comandos'); // Cambia a 'commands' si tu carpeta se llama así
+const commandsPath = path.join(__dirname, 'commands'); 
 const outputPath = path.join(__dirname, 'botKnowledge.json');
 
 const categories = fs.readdirSync(commandsPath).filter(folder =>

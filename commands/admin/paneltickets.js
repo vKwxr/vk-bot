@@ -1,3 +1,4 @@
+const path = require('path');
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, StringSelectMenuBuilder, PermissionsBitField } = require('discord.js');
 
 module.exports = {

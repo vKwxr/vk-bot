@@ -1,3 +1,4 @@
+const path = require('path');
 const { SlashCommandBuilder, EmbedBuilder, PermissionsBitField, ChannelType, AttachmentBuilder } = require('discord.js');
 const Canvas = require('@napi-rs/canvas');
 const fetch = require('node-fetch');
@@ -80,7 +81,6 @@ module.exports = {
     }
   },
 
-  // Función que debes llamar cuando detectes un nivel subido
   async sendLevelUpNotification(client, guild, user, level, messageChannel) {
     const { db } = client.config;
 
@@ -90,7 +90,6 @@ module.exports = {
     }
 
     try {
-      // Obtener canal configurado
       const row = await new Promise((resolve, reject) => {
         db.get('SELECT level_channel_id FROM level_config WHERE guild_id = ?', [guild.id], (err, row) => {
           if (err) reject(err);
@@ -103,7 +102,6 @@ module.exports = {
         notifyChannel = guild.channels.cache.get(row.level_channel_id);
       }
 
-      // Si no hay canal o no tiene permisos, usar canal donde se subió nivel
       if (!notifyChannel || !notifyChannel.permissionsFor(guild.members.me).has(PermissionsBitField.Flags.SendMessages)) {
         notifyChannel = messageChannel;
       }
@@ -113,7 +111,6 @@ module.exports = {
         return;
       }
 
-      // Crear imagen sakura kawaii con Canvas
       const attachment = await createSakuraLevelUpImage(user, level);
 
       const embed = new EmbedBuilder()
@@ -129,7 +126,6 @@ module.exports = {
   }
 };
 
-// Función auxiliar para crear imagen con canvas y gif de sakura
 async function createSakuraLevelUpImage(user, level) {
   const giphyUrl = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=sakura&limit=10&rating=g`;
 
@@ -161,11 +157,9 @@ async function createSakuraLevelUpImage(user, level) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
-  // Fondo sombra para texto
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
   ctx.fillRect(0, 200, canvas.width, 100);
 
-  // Texto felicitación
   ctx.font = '40px Sans';
   ctx.fillStyle = '#fff';
   ctx.fillText(`¡Felicidades, ${user.username}!`, 40, 240);
@@ -173,7 +167,6 @@ async function createSakuraLevelUpImage(user, level) {
   ctx.font = '32px Sans';
   ctx.fillText(`Has subido al nivel ${level}! 🌸`, 40, 280);
 
-  // Avatar circular con borde blanco
   const avatar = await Canvas.loadImage(user.displayAvatarURL({ format: 'png' }));
 
   const avatarX = 740;

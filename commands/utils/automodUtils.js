@@ -1,3 +1,4 @@
+const path = require('path');
 async function createAutoModRules(guild) {
   try {
     const existingRules = await guild.autoModerationRules.fetch();

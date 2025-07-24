@@ -1,6 +1,7 @@
+const path = require("path");
 const { SlashCommandBuilder } = require('discord.js');
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./economy.db');
+const db = new sqlite3.Database(path.join(__dirname, "../../economy.db"));
 
 module.exports = {
   data: new SlashCommandBuilder()

@@ -1,3 +1,4 @@
+const path = require('path');
 /**
  * guess.js
  * Juego de adivinar números con economía integrada.
@@ -64,14 +65,10 @@ function randomInt(max) {
 }
 
 function calcRewards({ rango, intentos, timeSec }) {
-  // Base: rango/10
   const base = Math.ceil(rango / 10);
 
-  // Intentos: + (máx 15 -> cae rápido)
-  // Si aciertas en 1 intento: +15, en 5: +10, en 10: +5, luego +1 mínimo
   let attemptBonus = Math.max(1, 16 - Math.min(intentos, 15));
 
-  // Rapidez: si <10s +20, <30s +15, <60s +10, <120s +5, else +1
   let speedBonus;
   if (timeSec <= 10) speedBonus = 20;
   else if (timeSec <= 30) speedBonus = 15;
@@ -79,7 +76,6 @@ function calcRewards({ rango, intentos, timeSec }) {
   else if (timeSec <= 120) speedBonus = 5;
   else speedBonus = 1;
 
-  // Perfect run: si intentos <=3 y time <=30s -> multiplicador 1.5
   let total = base + attemptBonus + speedBonus;
   if (intentos <= 3 && timeSec <= 30) {
     total = Math.round(total * 1.5);
@@ -89,7 +85,6 @@ function calcRewards({ rango, intentos, timeSec }) {
 }
 
 function hotColdMeter(guess, secret, rango) {
-  // Simple barra 10 segmentos: lleno = cerca
   const dist = Math.abs(secret - guess);
   const pct = 1 - dist / rango; // 0 lejos, 1 exacto
   const filled = Math.max(0, Math.min(HOT_COLD_SEGMENTS, Math.round(pct * HOT_COLD_SEGMENTS)));
@@ -108,7 +103,6 @@ function closeHint(guess, secret, rango) {
 }
 
 function shortRangeSuggestion(guess, secret) {
-  // Muestra subrango que seguramente contenga el número según mayor/menor
   if (guess < secret) {
     return `Prueba entre **${guess + 1}** y más arriba.`;
   } else {
@@ -248,14 +242,12 @@ function createCollector(ctx) {
 
     const respuesta = message.content.toLowerCase().trim();
 
-    // abandonar
     if (respuesta === 'rendirse' || respuesta === 'quit') {
       endGameCleanup(userId);
       const giveUpEmbed = buildGiveUpEmbed(juego.numeroSecreto);
       return message.reply({ embeds: [giveUpEmbed] });
     }
 
-    // validar número
     const numero = parseInt(respuesta, 10);
     if (isNaN(numero) || numero < 1 || numero > juego.rango) {
       return message.react('❌').catch(() => {});
@@ -263,7 +255,6 @@ function createCollector(ctx) {
 
     juego.intentos++;
 
-    // check acierto
     if (numero === juego.numeroSecreto) {
       endGameCleanup(userId);
       collector.stop('win');
@@ -275,7 +266,6 @@ function createCollector(ctx) {
         timeSec,
       });
 
-      // economía
       const economyDb = ctx.client?.config?.economyDb;
       if (economyDb) {
         addCoins(economyDb, userId, monedas, (err) => {
@@ -308,7 +298,6 @@ function createCollector(ctx) {
 
     await message.reply({ embeds: [embedHint] });
 
-    // Aviso de tiempo si corresponde y aún no avisamos
     const elapsed = Date.now() - startTime;
     const remaining = GAME_TIMEOUT_MS - elapsed;
     if (!juego.warned && remaining <= WARNING_TIME_MS) {
@@ -320,14 +309,12 @@ function createCollector(ctx) {
 
   collector.on('end', async (collected, reason) => {
     const juego = activeGames.get(userId);
-    if (!juego) return; // ya fue limpiado
+    if (!juego) return; 
 
-    // si no fue win ni manual quit
     endGameCleanup(userId);
 
     if (reason !== 'win') {
       const timeoutEmbed = buildTimeoutEmbed(juego.numeroSecreto);
-      // enviar por contexto
       if (ctx.mode === 'slash') {
         try {
           await ctx.interaction.followUp({ embeds: [timeoutEmbed] });
@@ -351,7 +338,6 @@ function createCollector(ctx) {
 async function startGuessGame(ctx, rango) {
   const { userId, channel } = ctx;
 
-  // Si ya existe juego activo en cualquier canal, bloquear
   if (activeGames.has(userId)) {
     if (ctx.mode === 'slash') {
       return ctx.interaction.reply({
@@ -363,7 +349,6 @@ async function startGuessGame(ctx, rango) {
     }
   }
 
-  // crear juego
   const numeroSecreto = randomInt(rango);
   const juego = {
     userId,
@@ -381,14 +366,12 @@ async function startGuessGame(ctx, rango) {
 
   const startEmbed = buildStartEmbed(rango);
 
-  // responder
   if (ctx.mode === 'slash') {
     await ctx.interaction.reply({ embeds: [startEmbed] });
   } else {
     await ctx.message.reply({ embeds: [startEmbed] });
   }
 
-  // set collector
   juego.collector = createCollector(ctx);
 }
 

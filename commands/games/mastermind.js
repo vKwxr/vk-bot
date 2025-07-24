@@ -1,6 +1,7 @@
+const path = require("path");
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ComponentType } = require('discord.js');
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./economy/data.db');
+const db = new sqlite3.Database(path.join(__dirname, '../../economy.db'));
 
 // Generar código aleatorio de 4 dígitos únicos
 function generarCodigo() {

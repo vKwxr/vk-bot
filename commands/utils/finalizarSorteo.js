@@ -1,3 +1,4 @@
+const path = require('path');
 const { EmbedBuilder } = require('discord.js');
 
 async function finalizarSorteo(client, messageId) {

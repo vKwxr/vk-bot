@@ -1,3 +1,4 @@
+const path = require('path');
 
 const { EmbedBuilder } = require('discord.js');
 
@@ -17,7 +18,7 @@ module.exports = {
     }
 
     // Verificar si la trivia está activa (importar desde el comando)
-    const triviaCommand = require('../commands/games/trivia.js');
+    const triviaCommand = require(path.join("commands\\games\\trivia.js"));
     const activeTrivia = new Map(); // Esto debería ser global, pero por simplicidad...
 
     // Obtener la pregunta del embed original

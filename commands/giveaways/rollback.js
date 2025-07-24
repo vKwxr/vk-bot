@@ -1,5 +1,6 @@
+const path = require('path');
 const { SlashCommandBuilder } = require('discord.js');
-const { getGiveawayData } = require('../../utils/giveawayUtils');
+const { getGiveawayData } = require(path.join("..\\utils\\giveawayUtils"));
 
 module.exports = {
   data: new SlashCommandBuilder()

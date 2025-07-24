@@ -1,3 +1,4 @@
+const path = require('path');
 const { SlashCommandBuilder } = require('discord.js');
 const translate = require('@vitalets/google-translate-api');
 

@@ -1,3 +1,4 @@
+const path = require('path');
 // utils/casinoGames.js
 module.exports = {
   slots: async (interaction, db, user, apuesta) => {

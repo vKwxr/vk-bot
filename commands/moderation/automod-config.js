@@ -1,3 +1,4 @@
+const path = require('path');
 const { SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder } = require('discord.js');
 
 module.exports = {
@@ -33,7 +34,6 @@ module.exports = {
     if (subcommand === 'add') {
       const role = interaction.options.getRole('rol');
 
-      // Insertar rol en DB
       db.run(
         `INSERT OR IGNORE INTO automod_roles (guild_id, role_id) VALUES (?, ?)`,
         [guildId, role.id],

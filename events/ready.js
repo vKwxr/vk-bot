@@ -1,5 +1,6 @@
+const path = require('path');
 const { EmbedBuilder } = require('discord.js');
-const { initGiveawayChecker } = require('/handlers/giveawayChecker');
+const { initGiveawayChecker } = require("C:\\Users\\USUARIO\\Desktop\\vK Bot\\handlers\\giveawayChecker.js");
 
 module.exports = {
   name: 'ready',

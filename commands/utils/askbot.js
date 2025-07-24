@@ -1,13 +1,12 @@
 const { SlashCommandBuilder } = require('discord.js');
-const { Configuration, OpenAIApi } = require('openai');
+const OpenAI = require('openai');
 const fs = require('fs');
 const path = require('path');
 
-const configuration = new Configuration({
+// Configurar OpenAI con tu API Key
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-
-const openai = new OpenAIApi(configuration);
 
 module.exports = {
   data: new SlashCommandBuilder()
@@ -26,12 +25,14 @@ module.exports = {
 
   async run(client, message, args) {
     const pregunta = args.join(' ');
-    if (!pregunta) return message.reply('❌ Debes hacer una pregunta sobre el bot.');
+    if (!pregunta) {
+      return message.reply('❌ Debes hacer una pregunta sobre el bot.');
+    }
 
-    // Leer el contenido actualizado de botKnowledge.json
+    // Leer el contenido de botKnowledge.json
     let knowledgeBase = '';
     try {
-      const filePath = path.join(__dirname, '../../botKnowledge.json');
+      const filePath = path.join(__dirname, path.join(__dirname, "../../botKnowledge.json"));
       knowledgeBase = fs.readFileSync(filePath, 'utf-8');
     } catch (err) {
       console.error('❌ Error al leer botKnowledge.json:', err);
@@ -39,7 +40,7 @@ module.exports = {
     }
 
     try {
-      const respuesta = await openai.createChatCompletion({
+      const respuesta = await openai.chat.completions.create({
         model: 'gpt-4',
         messages: [
           { role: 'system', content: knowledgeBase },
@@ -49,7 +50,7 @@ module.exports = {
         max_tokens: 700,
       });
 
-      const contenido = respuesta.data.choices[0].message.content;
+      const contenido = respuesta.choices[0].message.content;
       return message.reply({ content: contenido });
     } catch (error) {
       console.error('❌ Error con OpenAI:', error);

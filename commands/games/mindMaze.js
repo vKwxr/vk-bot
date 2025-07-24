@@ -1,6 +1,7 @@
+const path = require("path");
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const sqlite3 = require('sqlite3').verbose();
-const db = new sqlite3.Database('./economy.sqlite');
+const db = new sqlite3.Database(path.join(__dirname, "../../economy.db"));
 
 const riddles = [
   {

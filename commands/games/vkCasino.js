@@ -1,6 +1,7 @@
+const path = require('path');
 const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
-const db = require('better-sqlite3')('./main.db');
-const games = require('../../utils/casinoGames');
+const db = require('better-sqlite3')(path.join(__dirname, "./main.db"));
+const games = require(path.join("..\\utils\\casinoGames"));
 
 module.exports = {
   data: new SlashCommandBuilder()
